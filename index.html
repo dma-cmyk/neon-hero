@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ネオン・ヒーロー - プレビュー表示修正版</title>
+    <title>ネオン・ヒーロー - アローノーツ版</title>
     <style>
         :root {
             --bg-dark: #050510;
@@ -81,8 +81,8 @@
 
         /* メニュー（プレビュー）時のスタイル */
         #game-container.is-menu #media-bg-container {
-            z-index: 110; /* メニュー(100)より上に表示 */
-            top: 65.5%; /* プレビューエリアの視覚的な位置に合わせる */
+            z-index: 110; 
+            top: 65.5%; 
             height: 180px;
             width: 80%;
             left: 50%;
@@ -166,7 +166,7 @@
             z-index: 100;
             padding: 20px;
             box-sizing: border-box;
-            overflow: hidden; /* スクロールによるズレを防ぐ */
+            overflow: hidden; 
         }
 
         .btn {
@@ -227,7 +227,7 @@
         .diff-btn.active[data-diff="hard"] { background: var(--neon-pink); color: white; }
         .diff-btn.active[data-diff="expert"] { background: var(--neon-purple); color: white; }
 
-        /* プレビューエリア（背景の動画をここに見せる） */
+        /* プレビューエリア */
         #preview-placeholder-area {
             width: 100%;
             max-width: 400px;
@@ -289,7 +289,6 @@
 <div id="game-container" class="is-menu">
     <div class="grid-bg"><div class="grid-bg-inner"></div></div>
     
-    <!-- メディアコンテナ：プレビュー時は枠内に、プレイ時は背景に -->
     <div id="media-bg-container">
         <video id="bg-video" playsinline class="hidden" muted></video>
         <div id="youtube-player-container" class="hidden"><div id="yt-player-target"></div></div>
@@ -337,7 +336,6 @@
             </div>
         </div>
 
-        <!-- プレビュー位置の目安 -->
         <div id="preview-placeholder-area">
             <div id="placeholder-text">メディアを読み込むと<br>ここに表示されます</div>
         </div>
@@ -356,7 +354,7 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /**
- * ネオン・ヒーロー - プレビュー修正版
+ * ネオン・ヒーロー - アローノーツ版
  */
 
 const gameContainer = document.getElementById('game-container');
@@ -561,6 +559,46 @@ function getCurrentTimeMs() {
     return 0;
 }
 
+/**
+ * 矢印を描画するヘルパー関数
+ */
+function drawArrowNote(lane, x, y, size) {
+    const half = size / 2;
+    const quarter = size / 4;
+    
+    ctx.save();
+    ctx.translate(x, y);
+    
+    // レーンに対応する向きに回転
+    // 0: 左 (ArrowLeft), 1: 下 (ArrowDown), 2: 上 (ArrowUp), 3: 右 (ArrowRight)
+    const angles = [-Math.PI / 2, Math.PI, 0, Math.PI / 2];
+    ctx.rotate(angles[lane]);
+    
+    ctx.beginPath();
+    // 矢印の形状パス (DDR風のブロックアロー)
+    ctx.moveTo(0, -half);         // 頂点
+    ctx.lineTo(half, 0);          // 右翼端
+    ctx.lineTo(quarter, 0);       // インセット右
+    ctx.lineTo(quarter, half);    // 底面右
+    ctx.lineTo(-quarter, half);   // 底面左
+    ctx.lineTo(-quarter, 0);      // インセット左
+    ctx.lineTo(-half, 0);         // 左翼端
+    ctx.closePath();
+    
+    ctx.fill();
+    
+    // ネオンのハイライト（上側のエッジ）
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(0, -half + 4);
+    ctx.lineTo(half - 8, 0);
+    ctx.lineTo(-half + 8, 0);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.restore();
+}
+
 function handleKeyDown(key) {
     if (gameState !== 'PLAYING') return;
     const laneIdx = KEY_MAP[key.toLowerCase()];
@@ -606,8 +644,9 @@ function checkHit(laneIdx) {
 function applyVisualHit(judg, laneIdx) {
     scoreVal.innerText = score.toString().padStart(6, '0');
     judgmentText.innerText = judg;
-    judgmentText.style.color = COLORS[laneIdx % COLORS.length];
-    judgmentText.style.textShadow = `0 0 20px ${COLORS[laneIdx % COLORS.length]}`;
+    const color = COLORS[laneIdx % COLORS.length];
+    judgmentText.style.color = color;
+    judgmentText.style.textShadow = `0 0 20px ${color}`;
     judgmentText.style.transform = 'scale(1.5)';
     setTimeout(() => judgmentText.style.transform = 'scale(1)', 100);
     if (combo >= 3) {
@@ -648,10 +687,15 @@ function draw() {
         const timeDiff = note.time - now;
         const y = hitY - (timeDiff * config.speed);
         if (y > -100 && y < canvas.height + 100) {
-            ctx.fillStyle = COLORS[note.lane];
-            ctx.beginPath();
-            ctx.roundRect(note.lane * laneWidth + 15, y - 10, laneWidth - 30, 20, 5);
-            ctx.fill();
+            const color = COLORS[note.lane];
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+            
+            // ノーツを矢印として描画
+            drawArrowNote(note.lane, (note.lane + 0.5) * laneWidth, y, laneWidth * 0.7);
+            
+            ctx.shadowBlur = 0;
         }
         if (timeDiff < -JUDGMENT_MS.MISS && !note.hit) {
             note.hit = true; combo = 0; stats.miss++;
