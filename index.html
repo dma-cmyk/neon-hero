@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ネオン・ヒーロー - プレビュー修正版</title>
+    <title>ネオン・ヒーロー - プレビュー表示修正版</title>
     <style>
         :root {
             --bg-dark: #050510;
@@ -64,11 +64,11 @@
             to { background-position: 0 400px; }
         }
 
-        /* メディアコンテナ（常に最背面付近に配置） */
+        /* メディアコンテナ */
         #media-bg-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2; /* グリッドの上、UIの下 */
+            z-index: 2;
             pointer-events: none;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -76,20 +76,23 @@
         /* プレイ中のスタイル */
         #game-container.is-playing #media-bg-container {
             opacity: 0.5;
+            z-index: 2;
         }
 
         /* メニュー（プレビュー）時のスタイル */
         #game-container.is-menu #media-bg-container {
-            top: 50%;
-            height: 180px; /* プレビューエリアの高さに合わせる */
+            z-index: 110; /* メニュー(100)より上に表示 */
+            top: 65.5%; /* プレビューエリアの視覚的な位置に合わせる */
+            height: 180px;
             width: 80%;
             left: 50%;
-            transform: translate(-50%, 15px); /* プレビューエリアの位置に調整 */
+            transform: translate(-50%, -50%);
             opacity: 1;
             border: 2px solid var(--neon-cyan);
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
             overflow: hidden;
+            background: #000;
         }
 
         #bg-video, #youtube-player-container {
@@ -163,7 +166,7 @@
             z-index: 100;
             padding: 20px;
             box-sizing: border-box;
-            overflow-y: auto;
+            overflow: hidden; /* スクロールによるズレを防ぐ */
         }
 
         .btn {
@@ -224,18 +227,18 @@
         .diff-btn.active[data-diff="hard"] { background: var(--neon-pink); color: white; }
         .diff-btn.active[data-diff="expert"] { background: var(--neon-purple); color: white; }
 
-        /* プレビューエリア（プレースホルダー） */
+        /* プレビューエリア（背景の動画をここに見せる） */
         #preview-placeholder-area {
             width: 100%;
             max-width: 400px;
             height: 180px;
-            background: rgba(0,0,0,0.5);
-            margin: 10px 0;
+            background: rgba(0,0,0,0.8);
+            margin: 15px 0;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #444;
+            color: #555;
             font-size: 14px;
             text-align: center;
             border: 1px dashed #333;
@@ -286,7 +289,7 @@
 <div id="game-container" class="is-menu">
     <div class="grid-bg"><div class="grid-bg-inner"></div></div>
     
-    <!-- メディアコンテナ：ここがプレビューと背景を兼用する -->
+    <!-- メディアコンテナ：プレビュー時は枠内に、プレイ時は背景に -->
     <div id="media-bg-container">
         <video id="bg-video" playsinline class="hidden" muted></video>
         <div id="youtube-player-container" class="hidden"><div id="yt-player-target"></div></div>
@@ -308,7 +311,7 @@
     </div>
 
     <div id="start-screen">
-        <h1 style="font-size: 28px; margin: 10px 0 0 0; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ネオン・ヒーロー</h1>
+        <h1 style="font-size: 28px; margin: 10px 0 5px 0; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 5px var(--neon-cyan));">ネオン・ヒーロー</h1>
         
         <div class="input-group">
             <input type="file" id="media-upload" accept="audio/*,video/*" style="display: none;">
@@ -322,7 +325,7 @@
                 <button class="btn" id="yt-load-btn" style="background: #333; margin: 0; flex: 1; font-size: 12px;">読み込む</button>
                 <button class="btn hidden" id="yt-share-btn" style="background: var(--neon-purple); margin: 0; flex: 1; font-size: 12px;">共有</button>
             </div>
-            <div id="yt-status" style="font-size: 11px; color: var(--neon-pink); margin-top: 5px; height: 14px;"></div>
+            <div id="yt-status" style="font-size: 11px; color: var(--neon-pink); margin-top: 5px; height: 14px; text-align: center;"></div>
         </div>
 
         <div class="input-group">
@@ -334,7 +337,7 @@
             </div>
         </div>
 
-        <!-- プレビュー位置を確保するためのプレースホルダー -->
+        <!-- プレビュー位置の目安 -->
         <div id="preview-placeholder-area">
             <div id="placeholder-text">メディアを読み込むと<br>ここに表示されます</div>
         </div>
@@ -483,7 +486,13 @@ function loadYoutube(vidId) {
 
     ytPlayer = new YT.Player('yt-player-target', {
         height: '100%', width: '100%', videoId: vidId,
-        playerVars: { 'autoplay': 0, 'controls': 1, 'origin': safeOrigin, 'enablejsapi': 1 },
+        playerVars: { 
+            'autoplay': 0, 
+            'controls': 1, 
+            'origin': safeOrigin, 
+            'enablejsapi': 1,
+            'modestbranding': 1
+        },
         events: {
             'onReady': (e) => {
                 const duration = e.target.getDuration();
@@ -680,7 +689,7 @@ function startGame() {
         ytPlayer.playVideo();
     } else if (playMode === 'FILE_VIDEO') {
         bgVideo.currentTime = 0; bgVideo.play();
-        bgVideo.muted = false; // プレビュー時はミュート、本番は解除
+        bgVideo.muted = false; 
     } else if (playMode === 'FILE_AUDIO') {
         initAudioContext();
         if (audioCtx.state === 'suspended') audioCtx.resume();
