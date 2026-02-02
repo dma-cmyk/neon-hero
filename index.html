@@ -444,7 +444,7 @@
         .touch-btn.active { background: rgba(0, 242, 255, 0.15); color: var(--neon-cyan); border-top: 5px solid var(--neon-cyan); text-shadow: 0 0 20px var(--neon-cyan); }
 
         .hidden { display: none !important; }
-        .loader { border: 4px solid rgba(128,128,128,0.2); border-top: 4px solid var(--neon-cyan); border-radius: 50%; width: 28px; height: 28px; animation: spin 1s linear infinite; margin: 0 auto; }
+        .loader { border: 4px solid rgba(128,128,128,0.2); border-top: 4px solid var(--neon-cyan); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .toast { position: fixed; top: 30px; background: var(--neon-purple); color: white; padding: 16px 32px; border-radius: 50px; z-index: 300; font-weight: 900; box-shadow: 0 15px 35px var(--shadow-color); border: 2px solid rgba(255,255,255,0.2); }
@@ -811,6 +811,7 @@ const libraryTabs = document.getElementById('library-tabs');
 const gamepadStatus = document.getElementById('gamepad-status');
 
 const LANE_COUNT = 4;
+const KEY_MAP = { 'arrowleft': 0, 'arrowdown': 1, 'arrowup': 2, 'arrowright': 3 };
 const JUDGMENT_MS = { PERFECT: 60, GREAT: 110, GOOD: 160, MISS: 250 };
 const HIT_LINE_Y = 0.82;
 const CORE_COLORS = ['#00f2ff', '#ff007a', '#bcff00', '#9d00ff'];
@@ -837,9 +838,9 @@ let ytPlayer;
 let currentLang = 'en';
 let uiText = translations.en;
 
-// キーコンフィグ初期化
+// キーコンフィグ
 let keyBindings = JSON.parse(localStorage.getItem('neon-hero-keys')) || ["arrowleft", "arrowdown", "arrowup", "arrowright"];
-let isBindingKey = null; // どのレーンを待機中か
+let isBindingKey = null;
 
 function initI18n() {
     currentLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
@@ -869,7 +870,6 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('neon-hero-theme', isLight ? 'light' : 'dark');
 });
 
-// キーコンフィグUIの更新
 function updateKeyConfigUI() {
     keyBindings.forEach((key, idx) => {
         const el = document.getElementById(`key-name-${idx}`);
@@ -878,7 +878,6 @@ function updateKeyConfigUI() {
 }
 updateKeyConfigUI();
 
-// キーバインド設定イベント
 document.querySelectorAll('.key-bind-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         isBindingKey = parseInt(btn.dataset.lane);
@@ -887,10 +886,7 @@ document.querySelectorAll('.key-bind-btn').forEach(btn => {
     });
 });
 
-// 設定モーダルの開閉
-openSettingsBtn.addEventListener('click', () => {
-    settingsModal.classList.add('is-visible');
-});
+openSettingsBtn.addEventListener('click', () => settingsModal.classList.add('is-visible'));
 closeSettingsBtn.addEventListener('click', () => {
     settingsModal.classList.remove('is-visible');
     isBindingKey = null;
@@ -898,7 +894,6 @@ closeSettingsBtn.addEventListener('click', () => {
     updateKeyConfigUI();
 });
 
-// ゲームパッド・ポーリング
 function pollGamepad() {
     const gamepads = navigator.getGamepads();
     if (!gamepads[0]) {
@@ -906,38 +901,24 @@ function pollGamepad() {
         gamepadStatus.style.color = "var(--neon-pink)";
         return;
     }
-    
     gamepadStatus.innerText = uiText.msg_gamepad_on;
     gamepadStatus.style.color = "var(--neon-lime)";
-
     if (gameState !== 'PLAYING') return;
-
     const gp = gamepads[0];
-    
-    // シンプルなボタンマッピング (D-Pad or Face Buttons)
-    // 通常のHIDゲームパッドの基準マッピング
     const btnMap = [
-        gp.buttons[14]?.pressed || gp.buttons[0]?.pressed, // Lane 0: Left or A
-        gp.buttons[13]?.pressed || gp.buttons[1]?.pressed, // Lane 1: Down or B
-        gp.buttons[12]?.pressed || gp.buttons[3]?.pressed, // Lane 2: Up or Y
-        gp.buttons[15]?.pressed || gp.buttons[2]?.pressed  // Lane 3: Right or X
+        gp.buttons[14]?.pressed || gp.buttons[0]?.pressed,
+        gp.buttons[13]?.pressed || gp.buttons[1]?.pressed,
+        gp.buttons[12]?.pressed || gp.buttons[3]?.pressed,
+        gp.buttons[15]?.pressed || gp.buttons[2]?.pressed
     ];
-
     btnMap.forEach((isPressed, idx) => {
-        if (isPressed && !activeLanes[idx]) {
-            activeLanes[idx] = true;
-            checkHit(idx);
-        } else if (!isPressed && activeLanes[idx]) {
-            activeLanes[idx] = false;
-        }
+        if (isPressed && !activeLanes[idx]) { activeLanes[idx] = true; checkHit(idx); }
+        else if (!isPressed && activeLanes[idx]) { activeLanes[idx] = false; }
     });
 }
 
-// ゲーム内でのキーダウン処理
 function handleKeyDown(key) {
     const k = key.toLowerCase();
-
-    // キーコンフィグ待機中の場合
     if (isBindingKey !== null) {
         keyBindings[isBindingKey] = k;
         localStorage.setItem('neon-hero-keys', JSON.stringify(keyBindings));
@@ -946,9 +927,7 @@ function handleKeyDown(key) {
         updateKeyConfigUI();
         return;
     }
-
     if (gameState !== 'PLAYING') return;
-    
     const laneIdx = keyBindings.indexOf(k);
     if (laneIdx !== -1 && !activeLanes[laneIdx]) {
         activeLanes[laneIdx] = true;
@@ -990,9 +969,7 @@ openLibraryBtn.addEventListener('click', () => {
     renderLibrary('new');
 });
 
-closeLibraryBtn.addEventListener('click', () => {
-    libraryModal.classList.remove('is-visible');
-});
+closeLibraryBtn.addEventListener('click', () => libraryModal.classList.remove('is-visible'));
 
 libraryTabs.addEventListener('click', (e) => {
     const btn = e.target.closest('.tab-btn');
@@ -1046,7 +1023,7 @@ async function renderLibrary(mode) {
             <span class="play-count-badge">${v.playCount}${uiText.plays_suffix}</span>
             <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
             <div class="shared-item-info">
-                <div class="shared-item-title">${v.title || "Untitled"}</div>
+                <div class="shared-item-title">${v.title || "Untitled Track"}</div>
             </div>
         </div>
     `).join('');
@@ -1181,7 +1158,7 @@ function applyVisualHit(judg, laneIdx) {
 }
 
 function draw() {
-    pollGamepad(); // 常にパッド入力を監視
+    pollGamepad();
     if (gameState !== 'PLAYING') {
         if (gameState === 'START' || gameState === 'FINISHED') requestAnimationFrame(draw);
         return;
@@ -1230,7 +1207,13 @@ async function startGame() {
         window.recordPlay(currentVideoId, ytPlayer.getVideoData().title);
         mediaBgContainer.innerHTML = '';
         const playerDiv = document.getElementById('preview-content').children[0];
-        if (playerDiv) { mediaBgContainer.appendChild(playerDiv); ytPlayer.unMute(); ytPlayer.seekTo(0); ytPlayer.playVideo(); }
+        if (playerDiv) {
+            mediaBgContainer.appendChild(playerDiv);
+            ytPlayer.unMute();
+            ytPlayer.setVolume(100);
+            ytPlayer.seekTo(0);
+            ytPlayer.playVideo();
+        }
     }
     gameState = 'PLAYING';
     requestAnimationFrame(draw);
