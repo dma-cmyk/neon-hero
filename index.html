@@ -364,7 +364,6 @@
         }
         .modal.is-visible { display: flex; animation: fadeIn 0.4s ease; }
 
-        /* ライブラリ詳細表示用 */
         .shared-item-full {
             background: var(--input-bg);
             border: 1px solid var(--panel-border);
@@ -372,6 +371,7 @@
             cursor: pointer; transition: all 0.3s;
             box-shadow: 0 4px 10px var(--shadow-color);
             display: flex; gap: 15px; align-items: center;
+            position: relative;
         }
         .shared-item-full:hover {
             background: var(--panel-bg);
@@ -390,6 +390,54 @@
         }
         .shared-item-info { flex-grow: 1; min-width: 0; }
         .shared-item-title { font-size: 15px; font-weight: 800; color: var(--text-color); line-height: 1.4; word-break: break-word; }
+        
+        .play-count-badge {
+            position: absolute; top: 8px; right: 12px;
+            background: var(--neon-purple); color: white;
+            padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 900;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .library-tabs {
+            display: flex; gap: 8px; width: 100%; max-width: 450px;
+            margin-bottom: 15px; border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 10px; overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .library-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-color); opacity: 0.5;
+            padding: 8px 16px; cursor: pointer; font-weight: 900; font-size: 12px;
+            border-radius: 10px; transition: all 0.2s; white-space: nowrap;
+        }
+        .tab-btn.active { opacity: 1; background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+
+        /* キー設定UI */
+        .key-config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .key-bind-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            padding: 15px;
+            border-radius: 14px;
+            color: var(--text-color);
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+        .key-bind-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--neon-cyan); }
+        .key-bind-btn.waiting { border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .key-name { font-size: 20px; color: var(--neon-cyan); }
 
         #touch-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 160px; display: grid; grid-template-columns: repeat(4, 1fr); z-index: 20; }
         .touch-btn { background: linear-gradient(to bottom, transparent, rgba(128, 128, 128, 0.08)); border-top: 1px solid rgba(128, 128, 128, 0.15); display: flex; align-items: center; justify-content: center; font-size: 38px; color: rgba(128, 128, 128, 0.4); user-select: none; transition: all 0.15s; }
@@ -459,7 +507,34 @@
             <div id="menu-ranking-list" class="ranking-list"></div>
         </div>
 
-        <button class="btn" id="start-btn" disabled data-i18n="btn_ready">準備完了</button>
+        <div style="display: flex; gap: 15px; width: 100%; max-width: 340px;">
+            <button class="btn" id="start-btn" disabled data-i18n="btn_ready" style="flex: 2;">準備完了</button>
+            <button class="btn" id="open-settings-btn" style="flex: 1; background: var(--panel-bg); border: 1px solid var(--neon-cyan); color: var(--text-color);">⚙️</button>
+        </div>
+    </div>
+
+    <!-- 設定画面 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content" style="width: 100%; max-width: 450px;">
+            <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900;" data-i18n="settings_title">操作設定</h2>
+            
+            <div class="input-group" style="margin-top: 25px;">
+                <span class="input-label" data-i18n="label_key_config">キーコンフィグ</span>
+                <div class="key-config-grid">
+                    <button class="key-bind-btn" data-lane="0"><span>Lane 1</span><span class="key-name" id="key-name-0">←</span></button>
+                    <button class="key-bind-btn" data-lane="1"><span>Lane 2</span><span class="key-name" id="key-name-1">↓</span></button>
+                    <button class="key-bind-btn" data-lane="2"><span>Lane 3</span><span class="key-name" id="key-name-2">↑</span></button>
+                    <button class="key-bind-btn" data-lane="3"><span>Lane 4</span><span class="key-name" id="key-name-3">→</span></button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <span class="input-label" data-i18n="label_gamepad">ゲームパッド状態</span>
+                <div id="gamepad-status" style="text-align:center; font-size: 14px; font-weight: bold; color: var(--neon-lime);">未接続</div>
+            </div>
+
+            <button class="btn" id="close-settings-btn" style="background: #1e293b; margin: 20px auto 0 auto; border-radius: 14px;" data-i18n="btn_close">閉じる</button>
+        </div>
     </div>
 
     <!-- リザルト画面 -->
@@ -487,6 +562,14 @@
         <div class="modal-content" style="width: 100%; max-width: 500px; display: flex; flex-direction: column; height: 100%;">
             <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900; letter-spacing: 3px;">SHARED LIBRARY</h2>
             <p style="text-align: center; color: var(--text-color); opacity: 0.7; font-size: 13px; margin-bottom: 20px;" data-i18n="library_desc">コミュニティのお気に入り曲</p>
+            
+            <div class="library-tabs" id="library-tabs">
+                <button class="tab-btn active" data-mode="new" data-i18n="tab_new">新着順</button>
+                <button class="tab-btn" data-mode="daily" data-i18n="tab_daily">日別人気</button>
+                <button class="tab-btn" data-mode="weekly" data-i18n="tab_weekly">週別人気</button>
+                <button class="tab-btn" data-mode="monthly" data-i18n="tab_monthly">月別人気</button>
+            </div>
+
             <div id="shared-list-full">
                 <div class="loader"></div>
             </div>
@@ -516,7 +599,6 @@
         appId: "1:904605896059:web:87c5ab4437041e01e381de"
     };
 
-    // グローバル変数のチェックを強化
     const firebaseConfig = (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) 
         ? JSON.parse(window.__firebase_config) 
         : myFirebaseConfig;
@@ -536,7 +618,6 @@
     initAuth();
     onAuthStateChanged(auth, user => currentUser = user);
 
-    // スコア保存
     window.saveGameScore = async (data) => {
         if (!currentUser) return;
         try {
@@ -545,7 +626,6 @@
         } catch (e) { console.error(e); }
     };
 
-    // ランキング取得
     window.fetchRankings = async (videoId, difficulty) => {
         if (!currentUser) return [];
         try {
@@ -560,7 +640,6 @@
         } catch (e) { return []; }
     };
 
-    // 動画登録
     window.registerSharedVideo = async (videoId, title) => {
         if (!currentUser) return;
         try {
@@ -574,7 +653,14 @@
         } catch (e) { console.error(e); }
     };
 
-    // 共有リスト取得
+    window.recordPlay = async (videoId, title) => {
+        if (!currentUser) return;
+        try {
+            const logsCol = collection(db, 'artifacts', targetAppId, 'public', 'data', 'play_logs');
+            await addDoc(logsCol, { videoId, title, timestamp: Date.now() });
+        } catch (e) { console.error(e); }
+    };
+
     window.fetchSharedVideos = async () => {
         if (!currentUser) return [];
         try {
@@ -585,6 +671,17 @@
             return list.sort((a, b) => b.timestamp - a.timestamp);
         } catch (e) { return []; }
     };
+
+    window.fetchPlayLogs = async () => {
+        if (!currentUser) return [];
+        try {
+            const logsCol = collection(db, 'artifacts', targetAppId, 'public', 'data', 'play_logs');
+            const snapshot = await getDocs(logsCol);
+            const list = [];
+            snapshot.forEach(doc => list.push(doc.data()));
+            return list;
+        } catch (e) { return []; }
+    };
 </script>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -593,7 +690,6 @@
  * クライアントロジック
  */
 
-// 言語データ
 const translations = {
     ja: {
         score_label: "スコア",
@@ -624,7 +720,17 @@ const translations = {
         stats_great: "グレート",
         stats_good: "グッド",
         stats_miss: "ミス",
-        stats_combo: "最大コンボ"
+        stats_combo: "最大コンボ",
+        tab_new: "新着順",
+        tab_daily: "日別人気",
+        tab_weekly: "週別人気",
+        tab_monthly: "月別人気",
+        plays_suffix: "回プレイ",
+        settings_title: "操作設定",
+        label_key_config: "キーボード設定",
+        label_gamepad: "ゲームパッド状態",
+        msg_gamepad_on: "接続済み",
+        msg_gamepad_off: "未接続"
     },
     en: {
         score_label: "SCORE",
@@ -655,7 +761,17 @@ const translations = {
         stats_great: "GREAT",
         stats_good: "GOOD",
         stats_miss: "MISS",
-        stats_combo: "MAX COMBO"
+        stats_combo: "MAX COMBO",
+        tab_new: "Latest",
+        tab_daily: "Daily",
+        tab_weekly: "Weekly",
+        tab_monthly: "Monthly",
+        plays_suffix: " plays",
+        settings_title: "SETTINGS",
+        label_key_config: "KEYBOARD CONFIG",
+        label_gamepad: "GAMEPAD STATUS",
+        msg_gamepad_on: "CONNECTED",
+        msg_gamepad_off: "DISCONNECTED"
     }
 };
 
@@ -667,6 +783,9 @@ const previewContent = document.getElementById('preview-content');
 const previewPlaceholder = document.getElementById('preview-placeholder');
 const sharedListFull = document.getElementById('shared-list-full');
 const libraryModal = document.getElementById('library-modal');
+const settingsModal = document.getElementById('settings-modal');
+const openSettingsBtn = document.getElementById('open-settings-btn');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
 const openLibraryBtn = document.getElementById('open-library-btn');
 const closeLibraryBtn = document.getElementById('close-library-btn');
 const startBtn = document.getElementById('start-btn');
@@ -688,9 +807,10 @@ const playerNameInput = document.getElementById('player-name');
 const playerCommentInput = document.getElementById('player-comment');
 const ytUrlInput = document.getElementById('yt-url');
 const themeToggle = document.getElementById('theme-toggle');
+const libraryTabs = document.getElementById('library-tabs');
+const gamepadStatus = document.getElementById('gamepad-status');
 
 const LANE_COUNT = 4;
-const KEY_MAP = { 'arrowleft': 0, 'arrowdown': 1, 'arrowup': 2, 'arrowright': 3 };
 const JUDGMENT_MS = { PERFECT: 60, GREAT: 110, GOOD: 160, MISS: 250 };
 const HIT_LINE_Y = 0.82;
 const CORE_COLORS = ['#00f2ff', '#ff007a', '#bcff00', '#9d00ff'];
@@ -715,9 +835,12 @@ let currentVideoId = "";
 let currentDuration = 0;
 let ytPlayer;
 let currentLang = 'en';
-let uiText = translations.en; // 現在の翻訳オブジェクト
+let uiText = translations.en;
 
-// 言語初期化
+// キーコンフィグ初期化
+let keyBindings = JSON.parse(localStorage.getItem('neon-hero-keys')) || ["arrowleft", "arrowdown", "arrowup", "arrowright"];
+let isBindingKey = null; // どのレーンを待機中か
+
 function initI18n() {
     currentLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
     uiText = translations[currentLang];
@@ -746,6 +869,105 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('neon-hero-theme', isLight ? 'light' : 'dark');
 });
 
+// キーコンフィグUIの更新
+function updateKeyConfigUI() {
+    keyBindings.forEach((key, idx) => {
+        const el = document.getElementById(`key-name-${idx}`);
+        if (el) el.innerText = key.toUpperCase().replace('ARROW', '');
+    });
+}
+updateKeyConfigUI();
+
+// キーバインド設定イベント
+document.querySelectorAll('.key-bind-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        isBindingKey = parseInt(btn.dataset.lane);
+        btn.classList.add('waiting');
+        btn.querySelector('.key-name').innerText = "...";
+    });
+});
+
+// 設定モーダルの開閉
+openSettingsBtn.addEventListener('click', () => {
+    settingsModal.classList.add('is-visible');
+});
+closeSettingsBtn.addEventListener('click', () => {
+    settingsModal.classList.remove('is-visible');
+    isBindingKey = null;
+    document.querySelectorAll('.key-bind-btn').forEach(b => b.classList.remove('waiting'));
+    updateKeyConfigUI();
+});
+
+// ゲームパッド・ポーリング
+function pollGamepad() {
+    const gamepads = navigator.getGamepads();
+    if (!gamepads[0]) {
+        gamepadStatus.innerText = uiText.msg_gamepad_off;
+        gamepadStatus.style.color = "var(--neon-pink)";
+        return;
+    }
+    
+    gamepadStatus.innerText = uiText.msg_gamepad_on;
+    gamepadStatus.style.color = "var(--neon-lime)";
+
+    if (gameState !== 'PLAYING') return;
+
+    const gp = gamepads[0];
+    
+    // シンプルなボタンマッピング (D-Pad or Face Buttons)
+    // 通常のHIDゲームパッドの基準マッピング
+    const btnMap = [
+        gp.buttons[14]?.pressed || gp.buttons[0]?.pressed, // Lane 0: Left or A
+        gp.buttons[13]?.pressed || gp.buttons[1]?.pressed, // Lane 1: Down or B
+        gp.buttons[12]?.pressed || gp.buttons[3]?.pressed, // Lane 2: Up or Y
+        gp.buttons[15]?.pressed || gp.buttons[2]?.pressed  // Lane 3: Right or X
+    ];
+
+    btnMap.forEach((isPressed, idx) => {
+        if (isPressed && !activeLanes[idx]) {
+            activeLanes[idx] = true;
+            checkHit(idx);
+        } else if (!isPressed && activeLanes[idx]) {
+            activeLanes[idx] = false;
+        }
+    });
+}
+
+// ゲーム内でのキーダウン処理
+function handleKeyDown(key) {
+    const k = key.toLowerCase();
+
+    // キーコンフィグ待機中の場合
+    if (isBindingKey !== null) {
+        keyBindings[isBindingKey] = k;
+        localStorage.setItem('neon-hero-keys', JSON.stringify(keyBindings));
+        isBindingKey = null;
+        document.querySelectorAll('.key-bind-btn').forEach(b => b.classList.remove('waiting'));
+        updateKeyConfigUI();
+        return;
+    }
+
+    if (gameState !== 'PLAYING') return;
+    
+    const laneIdx = keyBindings.indexOf(k);
+    if (laneIdx !== -1 && !activeLanes[laneIdx]) {
+        activeLanes[laneIdx] = true;
+        const btn = document.getElementById(`btn-${laneIdx}`);
+        if (btn) btn.classList.add('active');
+        checkHit(laneIdx);
+    }
+}
+
+function handleKeyUp(key) {
+    const k = key.toLowerCase();
+    const laneIdx = keyBindings.indexOf(k);
+    if (laneIdx !== -1) {
+        activeLanes[laneIdx] = false;
+        const btn = document.getElementById(`btn-${laneIdx}`);
+        if (btn) btn.classList.remove('active');
+    }
+}
+
 async function generateTrip(password) {
     if (!password) return "";
     const encoder = new TextEncoder();
@@ -765,11 +987,19 @@ async function parsePlayerName(rawName) {
 
 openLibraryBtn.addEventListener('click', () => {
     libraryModal.classList.add('is-visible');
-    renderLibrary();
+    renderLibrary('new');
 });
 
 closeLibraryBtn.addEventListener('click', () => {
     libraryModal.classList.remove('is-visible');
+});
+
+libraryTabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderLibrary(btn.dataset.mode);
 });
 
 diffSelector.addEventListener('click', (e) => {
@@ -785,25 +1015,38 @@ diffSelector.addEventListener('click', (e) => {
     }
 });
 
-async function renderLibrary() {
+async function renderLibrary(mode) {
     sharedListFull.innerHTML = '<div class="loader"></div>';
-    
-    if (typeof window.fetchSharedVideos !== 'function') {
-        sharedListFull.innerHTML = `<div style="color:#64748b; font-size:14px; text-align:center;">${uiText.msg_loading}</div>`;
-        return;
+    if (typeof window.fetchSharedVideos !== 'function' || typeof window.fetchPlayLogs !== 'function') return;
+
+    const [videos, logs] = await Promise.all([window.fetchSharedVideos(), window.fetchPlayLogs()]);
+    let displayList = [];
+    const now = Date.now();
+    const periods = { daily: 86400000, weekly: 604800000, monthly: 2592000000 };
+
+    if (mode === 'new') {
+        displayList = videos.map(v => ({...v, playCount: logs.filter(l => l.videoId === v.videoId).length}));
+    } else {
+        const threshold = periods[mode];
+        const recentLogs = logs.filter(l => (now - l.timestamp) < threshold);
+        const counts = recentLogs.reduce((acc, log) => { acc[log.videoId] = (acc[log.videoId] || 0) + 1; return acc; }, {});
+        displayList = Object.entries(counts).map(([videoId, count]) => {
+            const video = videos.find(v => v.videoId === videoId);
+            return video ? { ...video, playCount: count } : null;
+        }).filter(v => v !== null).sort((a, b) => b.playCount - a.playCount);
     }
 
-    const videos = await window.fetchSharedVideos();
-    if (videos.length === 0) {
+    if (displayList.length === 0) {
         sharedListFull.innerHTML = `<div style="color:#64748b; font-size:14px; text-align:center;">${uiText.msg_no_records}</div>`;
         return;
     }
 
-    sharedListFull.innerHTML = videos.map(v => `
+    sharedListFull.innerHTML = displayList.map(v => `
         <div class="shared-item-full" data-id="${v.videoId}">
+            <span class="play-count-badge">${v.playCount}${uiText.plays_suffix}</span>
             <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
             <div class="shared-item-info">
-                <div class="shared-item-title">${v.title || "Untitled Track"}</div>
+                <div class="shared-item-title">${v.title || "Untitled"}</div>
             </div>
         </div>
     `).join('');
@@ -823,7 +1066,6 @@ function loadYoutube(vidId) {
     previewPlaceholder.classList.add('hidden');
     previewContent.innerHTML = '<div id="yt-player-target"></div>';
     const safeOrigin = window.location.protocol === 'file:' ? 'https://www.youtube.com' : window.location.origin;
-    
     ytPlayer = new YT.Player('yt-player-target', {
         height: '100%', width: '100%', videoId: vidId,
         playerVars: { 'autoplay': 1, 'controls': 1, 'origin': safeOrigin, 'enablejsapi': 1, 'modestbranding': 1, 'mute': 1 },
@@ -838,12 +1080,9 @@ function loadYoutube(vidId) {
                 startBtn.disabled = false;
                 ytShareBtn.classList.remove('hidden');
                 updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
-                const videoData = ytPlayer.getVideoData();
-                if (typeof window.registerSharedVideo === 'function') {
-                    window.registerSharedVideo(vidId, videoData.title);
-                }
+                window.registerSharedVideo(vidId, ytPlayer.getVideoData().title);
             },
-            'onError': (e) => { ytStatus.innerText = uiText.msg_error + ": " + e.data; }
+            'onError': (e) => { ytStatus.innerText = uiText.msg_error; }
         }
     });
 }
@@ -856,8 +1095,7 @@ ytLoadBtn.addEventListener('click', () => {
 ytShareBtn.addEventListener('click', () => {
     const shareUrl = `${window.location.origin}${window.location.pathname}?v=${currentVideoId}`;
     const tempInput = document.createElement("input");
-    tempInput.value = shareUrl;
-    document.body.appendChild(tempInput); tempInput.select();
+    tempInput.value = shareUrl; document.body.appendChild(tempInput); tempInput.select();
     document.execCommand("copy"); document.body.removeChild(tempInput);
     showToast(uiText.msg_copied);
 });
@@ -865,8 +1103,7 @@ ytShareBtn.addEventListener('click', () => {
 function showToast(msg) {
     const toast = document.createElement("div");
     toast.className = "toast"; toast.innerText = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2500);
+    document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500);
 }
 
 function extractYoutubeId(url) {
@@ -891,52 +1128,24 @@ function generateMap(durationSeconds) {
 }
 
 function getCurrentTimeMs() {
-    if (playMode === 'YOUTUBE' && ytPlayer?.getCurrentTime) {
-        try { return ytPlayer.getCurrentTime() * 1000; } catch(e) { return 0; }
-    }
-    return 0;
+    return (playMode === 'YOUTUBE' && ytPlayer?.getCurrentTime) ? ytPlayer.getCurrentTime() * 1000 : 0;
 }
 
 function drawArrowNote(lane, x, y, size) {
-    const half = size / 2;
-    const quarter = size / 4;
-    ctx.save();
-    ctx.translate(x, y);
-    const angles = [-Math.PI / 2, Math.PI, 0, Math.PI / 2];
-    ctx.rotate(angles[lane]);
+    const half = size / 2, quarter = size / 4;
+    ctx.save(); ctx.translate(x, y);
+    ctx.rotate([-Math.PI/2, Math.PI, 0, Math.PI/2][lane]);
     ctx.beginPath();
     ctx.moveTo(0, -half); ctx.lineTo(half, 0); ctx.lineTo(quarter, 0); ctx.lineTo(quarter, half); ctx.lineTo(-quarter, half); ctx.lineTo(-quarter, 0); ctx.lineTo(-half, 0);
-    ctx.closePath();
-    ctx.fill();
+    ctx.closePath(); ctx.fill();
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
     ctx.beginPath(); ctx.moveTo(0, -half + 4); ctx.lineTo(half - 8, 0); ctx.lineTo(-half + 8, 0); ctx.closePath(); ctx.fill();
     ctx.restore();
 }
 
-function handleKeyDown(key) {
-    if (gameState !== 'PLAYING') return;
-    const laneIdx = KEY_MAP[key.toLowerCase()];
-    if (laneIdx !== undefined && !activeLanes[laneIdx]) {
-        activeLanes[laneIdx] = true;
-        const btn = document.getElementById(`btn-${laneIdx}`);
-        if (btn) btn.classList.add('active');
-        checkHit(laneIdx);
-    }
-}
-
-function handleKeyUp(key) {
-    const laneIdx = KEY_MAP[key.toLowerCase()];
-    if (laneIdx !== undefined) {
-        activeLanes[laneIdx] = false;
-        const btn = document.getElementById(`btn-${laneIdx}`);
-        if (btn) btn.classList.remove('active');
-    }
-}
-
 function checkHit(laneIdx) {
     const now = getCurrentTimeMs();
-    let closestNote = null;
-    let minDiff = Infinity;
+    let closestNote = null, minDiff = Infinity;
     for (let n of notes) {
         if (n.lane === laneIdx && !n.hit) {
             const diff = Math.abs(n.time - now);
@@ -944,8 +1153,7 @@ function checkHit(laneIdx) {
         }
     }
     if (closestNote && minDiff < JUDGMENT_MS.MISS) {
-        let judg = "";
-        let pts = 0;
+        let judg = "", pts = 0;
         if (minDiff < JUDGMENT_MS.PERFECT) { judg = "Perfect"; pts = 1000; stats.perfect++; }
         else if (minDiff < JUDGMENT_MS.GREAT) { judg = "Great"; pts = 700; stats.great++; }
         else if (minDiff < JUDGMENT_MS.GOOD) { judg = "Good"; pts = 400; stats.good++; }
@@ -966,54 +1174,39 @@ function applyVisualHit(judg, laneIdx) {
     judgmentText.style.textShadow = isLight ? `0 0 10px ${color}` : `0 0 20px ${color}`;
     judgmentText.style.transform = 'scale(1.5)';
     setTimeout(() => judgmentText.style.transform = 'scale(1)', 100);
-    if (combo >= 3) {
-        comboText.innerText = combo;
-        comboText.style.opacity = "1";
-    }
-    createParticles(laneIdx);
-}
-
-function createParticles(laneIdx) {
-    const x = (laneIdx + 0.5) * (canvas.width / LANE_COUNT);
-    const y = canvas.height * HIT_LINE_Y;
+    if (combo >= 3) { comboText.innerText = combo; comboText.style.opacity = "1"; }
     for (let i = 0; i < 15; i++) {
-        particles.push({
-            x, y, vx: (Math.random() - 0.5) * 18, vy: (Math.random() - 0.5) * 18, life: 1.0, color: CORE_COLORS[laneIdx]
-        });
+        particles.push({x: (laneIdx + 0.5) * (canvas.width / LANE_COUNT), y: canvas.height * HIT_LINE_Y, vx: (Math.random() - 0.5) * 18, vy: (Math.random() - 0.5) * 18, life: 1.0, color: CORE_COLORS[laneIdx % CORE_COLORS.length]});
     }
 }
 
 function draw() {
-    if (gameState !== 'PLAYING') return;
+    pollGamepad(); // 常にパッド入力を監視
+    if (gameState !== 'PLAYING') {
+        if (gameState === 'START' || gameState === 'FINISHED') requestAnimationFrame(draw);
+        return;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const now = getCurrentTimeMs();
-    const laneWidth = canvas.width / LANE_COUNT;
-    const hitY = canvas.height * HIT_LINE_Y;
-    const config = DIFFICULTY_CONFIG[currentDiff];
-    const isLight = document.body.classList.contains('light-mode');
+    const now = getCurrentTimeMs(), laneWidth = canvas.width / LANE_COUNT, hitY = canvas.height * HIT_LINE_Y, config = DIFFICULTY_CONFIG[currentDiff], isLight = document.body.classList.contains('light-mode');
 
     for (let i = 0; i < LANE_COUNT; i++) {
         ctx.fillStyle = activeLanes[i] ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)') : 'rgba(128,128,128,0.02)';
         ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
         ctx.strokeStyle = activeLanes[i] ? CORE_COLORS[i] : (isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.15)');
-        ctx.lineWidth = activeLanes[i] ? 5 : 1;
-        ctx.beginPath(); ctx.moveTo(i * laneWidth + 10, hitY); ctx.lineTo((i + 1) * laneWidth - 10, hitY); ctx.stroke();
+        ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(i * laneWidth + 10, hitY); ctx.lineTo((i + 1) * laneWidth - 10, hitY); ctx.stroke();
     }
     notes.forEach(note => {
         if (note.hit) return;
-        const timeDiff = note.time - now;
-        const y = hitY - (timeDiff * config.speed);
+        const timeDiff = note.time - now, y = hitY - (timeDiff * config.speed);
         if (y > -100 && y < canvas.height + 100) {
-            ctx.fillStyle = CORE_COLORS[note.lane];
-            ctx.shadowBlur = isLight ? 12 : 20; ctx.shadowColor = CORE_COLORS[note.lane];
+            ctx.fillStyle = CORE_COLORS[note.lane]; ctx.shadowBlur = isLight ? 12 : 20; ctx.shadowColor = CORE_COLORS[note.lane];
             drawArrowNote(note.lane, (note.lane + 0.5) * laneWidth, y, laneWidth * 0.7);
             ctx.shadowBlur = 0;
         }
         if (timeDiff < -JUDGMENT_MS.MISS && !note.hit) {
             note.hit = true; combo = 0; stats.miss++;
             judgmentText.innerText = "Miss"; comboText.style.opacity = "0";
-            judgmentText.style.color = "#666";
-            judgmentText.style.textShadow = "none";
+            judgmentText.style.color = "#666"; judgmentText.style.textShadow = "none";
         }
     });
     particles = particles.filter(p => p.life > 0);
@@ -1023,31 +1216,21 @@ function draw() {
         p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.025;
     });
     ctx.globalAlpha = 1.0;
-    let isEnded = false;
-    if (playMode === 'YOUTUBE' && ytPlayer?.getPlayerState?.() === YT.PlayerState.ENDED) isEnded = true;
-    if (isEnded) endGame(); else requestAnimationFrame(draw);
+    if (ytPlayer?.getPlayerState?.() === YT.PlayerState.ENDED) endGame(); else requestAnimationFrame(draw);
 }
 
 async function startGame() {
     const rawName = playerNameInput.value.trim() || (currentLang === 'ja' ? '名無し' : 'Anonymous');
     localStorage.setItem('neon-hero-player-name-raw', rawName);
-
-    score = 0; combo = 0; maxCombo = 0;
-    stats = { perfect: 0, great: 0, good: 0, miss: 0 };
+    score = 0; combo = 0; maxCombo = 0; stats = { perfect: 0, great: 0, good: 0, miss: 0 };
     particles = []; scoreVal.innerText = "000000"; judgmentText.innerText = "";
     notes = generateMap(currentDuration);
-    startScreen.classList.add('hidden');
-    resultScreen.classList.add('hidden');
-    gameContainer.classList.add('is-playing');
+    startScreen.classList.add('hidden'); resultScreen.classList.add('hidden'); gameContainer.classList.add('is-playing');
     if (ytPlayer) {
+        window.recordPlay(currentVideoId, ytPlayer.getVideoData().title);
         mediaBgContainer.innerHTML = '';
         const playerDiv = document.getElementById('preview-content').children[0];
-        if (playerDiv) {
-            mediaBgContainer.appendChild(playerDiv);
-            ytPlayer.unMute();
-            ytPlayer.seekTo(0);
-            ytPlayer.playVideo();
-        }
+        if (playerDiv) { mediaBgContainer.appendChild(playerDiv); ytPlayer.unMute(); ytPlayer.seekTo(0); ytPlayer.playVideo(); }
     }
     gameState = 'PLAYING';
     requestAnimationFrame(draw);
@@ -1055,65 +1238,27 @@ async function startGame() {
 
 async function endGame() {
     gameState = 'FINISHED';
-    resultScreen.classList.remove('hidden');
-    gameContainer.classList.remove('is-playing');
+    resultScreen.classList.remove('hidden'); gameContainer.classList.remove('is-playing');
     document.getElementById('final-score').innerText = score.toLocaleString();
-    
-    document.getElementById('stats-detail').innerHTML = `
-        <span style="color:var(--neon-cyan)">${uiText.stats_perfect}: ${stats.perfect}</span> | 
-        <span style="color:var(--neon-pink)">${uiText.stats_great}: ${stats.great}</span> | 
-        <span style="color:var(--neon-lime)">${uiText.stats_good}: ${stats.good}</span><br>
-        ${uiText.stats_combo}: ${maxCombo} | LEVEL: ${currentDiff.toUpperCase()}
-    `;
-    
+    document.getElementById('stats-detail').innerHTML = `<span style="color:var(--neon-cyan)">${uiText.stats_perfect}: ${stats.perfect}</span> | <span style="color:var(--neon-pink)">${uiText.stats_great}: ${stats.great}</span> | <span style="color:var(--neon-lime)">${uiText.stats_good}: ${stats.good}</span><br>${uiText.stats_combo}: ${maxCombo} | LEVEL: ${currentDiff.toUpperCase()}`;
     registerScoreBtn.disabled = false;
     updateRankingDisplay(currentVideoId, currentDiff, resultRankingList);
 }
 
 registerScoreBtn.addEventListener('click', async () => {
-    if (typeof window.saveGameScore !== 'function') return;
-    
     registerScoreBtn.disabled = true;
-    const rawName = playerNameInput.value.trim() || (currentLang === 'ja' ? '名無し' : 'Anonymous');
-    const comment = playerCommentInput.value.trim() || "";
-    const parsed = await parsePlayerName(rawName);
-
-    await window.saveGameScore({ 
-        playerName: parsed.name, 
-        playerTrip: parsed.trip,
-        comment: comment,
-        score: score, 
-        videoId: currentVideoId, 
-        difficulty: currentDiff 
-    });
-    
+    const parsed = await parsePlayerName(playerNameInput.value.trim() || "");
+    await window.saveGameScore({ playerName: parsed.name, playerTrip: parsed.trip, comment: playerCommentInput.value.trim() || "", score: score, videoId: currentVideoId, difficulty: currentDiff });
     updateRankingDisplay(currentVideoId, currentDiff, resultRankingList);
 });
 
 async function updateRankingDisplay(videoId, difficulty, listElement, containerElement = null) {
-    if (!videoId || typeof window.fetchRankings !== 'function') return;
-    
+    if (!videoId) return;
     listElement.innerHTML = '<div class="loader"></div>';
     if (containerElement) containerElement.classList.remove('hidden');
     const topScores = await window.fetchRankings(videoId, difficulty);
-    
-    if (topScores.length === 0) {
-        listElement.innerHTML = `<div style="text-align:center; font-size:12px; color:#64748b; padding:10px;">${uiText.msg_no_records}</div>`;
-        return;
-    }
-    listElement.innerHTML = topScores.map((item, index) => `
-        <div class="ranking-item">
-            <div class="ranking-header">
-                <span class="ranking-rank">${index + 1}</span>
-                <span class="ranking-name">
-                    ${item.playerName}
-                    <span class="ranking-trip">${item.playerTrip || ""}</span>
-                </span>
-                <span class="ranking-score">${item.score.toLocaleString()}</span>
-            </div>
-            ${item.comment ? `<div class="ranking-comment">"${item.comment}"</div>` : ""}
-        </div>
-    `).join('');
+    if (topScores.length === 0) { listElement.innerHTML = `<div style="text-align:center; font-size:12px; color:#64748b; padding:10px;">${uiText.msg_no_records}</div>`; return; }
+    listElement.innerHTML = topScores.map((item, index) => `<div class="ranking-item"><div class="ranking-header"><span class="ranking-rank">${index + 1}</span><span class="ranking-name">${item.playerName}<span class="ranking-trip">${item.playerTrip || ""}</span></span><span class="ranking-score">${item.score.toLocaleString()}</span></div>${item.comment ? `<div class="ranking-comment">"${item.comment}"</div>` : ""}</div>`).join('');
 }
 
 window.addEventListener('keydown', (e) => handleKeyDown(e.key));
@@ -1125,34 +1270,24 @@ document.querySelectorAll('.touch-btn').forEach(btn => {
 startBtn.addEventListener('click', startGame);
 retryBtn.addEventListener('click', () => location.reload());
 
-function resize() {
-    canvas.width = gameContainer.clientWidth;
-    canvas.height = gameContainer.clientHeight;
-}
-window.addEventListener('resize', resize);
-resize();
+function resize() { canvas.width = gameContainer.clientWidth; canvas.height = gameContainer.clientHeight; }
+window.addEventListener('resize', resize); resize();
 
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const wait = setInterval(() => {
         if (typeof YT !== 'undefined' && YT.Player && typeof window.fetchSharedVideos === 'function') { 
-            if (params.get('v')) {
-                ytUrlInput.value = `https://www.youtube.com/watch?v=${params.get('v')}`;
-                loadYoutube(params.get('v')); 
-            }
+            if (params.get('v')) { ytUrlInput.value = `https://www.youtube.com/watch?v=${params.get('v')}`; loadYoutube(params.get('v')); }
             clearInterval(wait); 
         }
     }, 500);
+    requestAnimationFrame(draw);
 });
 
 if (!CanvasRenderingContext2D.prototype.roundRect) {
     CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
         if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
-        this.moveTo(x + r, y);
-        this.arcTo(x + w, y, x + w, y + h, r);
-        this.arcTo(x + w, y + h, x, y + h, r);
-        this.arcTo(x, y + h, x, y, r);
-        this.arcTo(x, y, x + w, y, r);
+        this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r); this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
         this.closePath(); return this;
     }
 }
