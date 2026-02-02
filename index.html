@@ -416,23 +416,34 @@
             transform: scale(1.03);
             box-shadow: 0 8px 25px var(--shadow-color);
         }
-        .shared-thumbnail {
+
+        .thumbnail-container {
+            position: relative;
             width: 120px;
             height: 68px;
-            object-fit: cover;
-            border-radius: 10px;
             flex-shrink: 0;
-            border: 1px solid rgba(128,128,128,0.2);
+            border-radius: 10px;
+            overflow: hidden;
             background: #000;
+            border: 1.5px solid rgba(128,128,128,0.2);
         }
+        .shared-thumbnail { width: 100%; height: 100%; object-fit: cover; }
+        .duration-badge {
+            position: absolute; bottom: 4px; right: 4px;
+            background: rgba(0,0,0,0.85); color: white;
+            padding: 1px 4px; border-radius: 4px; font-size: 10px; font-weight: 900;
+            font-family: monospace; letter-spacing: 0.5px;
+        }
+
         .shared-item-info { flex-grow: 1; min-width: 0; }
         .shared-item-title { font-size: 15px; font-weight: 800; color: var(--text-color); line-height: 1.4; word-break: break-word; }
         
         .play-count-badge {
-            position: absolute; top: 8px; right: 12px;
+            position: absolute; top: -10px; right: 10px;
             background: var(--neon-purple); color: white;
-            padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 900;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 900;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 5;
         }
 
         .library-tabs {
@@ -440,7 +451,7 @@
             margin-bottom: 15px; border-bottom: 1px solid var(--panel-border);
             padding-bottom: 10px; overflow-x: auto;
             scrollbar-width: none;
-            flex-shrink: 0; /* タブが潰れないように固定 */
+            flex-shrink: 0;
         }
         .library-tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
@@ -473,7 +484,6 @@
         }
         .key-bind-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--neon-cyan); }
         .key-bind-btn.waiting { border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
         .key-name { font-size: 18px; color: var(--neon-cyan); font-weight: 900; font-family: 'Exo 2', sans-serif; text-transform: uppercase; }
         .lane-arrow { font-size: 28px; font-weight: 900; line-height: 1; filter: drop-shadow(0 0 8px currentColor); }
 
@@ -640,7 +650,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const myFirebaseConfig = {
         apiKey: "AIzaSyBiCTU35eBaVXhTfnd-XDifHDDxXZALQCM",
@@ -692,15 +702,21 @@
         } catch (e) { return []; }
     };
 
-    window.registerSharedVideo = async (videoId, title) => {
+    // 再生時間を追加して登録
+    window.registerSharedVideo = async (videoId, title, duration) => {
         if (!currentUser) return;
         try {
             const sharedCol = collection(db, 'artifacts', targetAppId, 'public', 'data', 'shared_videos');
             const snapshot = await getDocs(sharedCol);
-            let exists = false;
-            snapshot.forEach(doc => { if (doc.data().videoId === videoId) exists = true; });
-            if (!exists) {
-                await addDoc(sharedCol, { videoId, title, timestamp: Date.now() });
+            let existingId = null;
+            snapshot.forEach(d => { if (d.data().videoId === videoId) existingId = d.id; });
+            
+            if (!existingId) {
+                await addDoc(sharedCol, { videoId, title, duration, timestamp: Date.now() });
+            } else if (duration) {
+                // 既に存在していてもdurationがない場合は更新
+                const videoDoc = doc(db, 'artifacts', targetAppId, 'public', 'data', 'shared_videos', existingId);
+                await updateDoc(videoDoc, { duration: duration });
             }
         } catch (e) { console.error(e); }
     };
@@ -917,6 +933,14 @@ function initI18n() {
 
 initI18n();
 
+// 秒をフォーマット (例: 125 -> 2:05)
+function formatDuration(seconds) {
+    if (!seconds) return "";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 playerNameInput.value = localStorage.getItem('neon-hero-player-name-raw') || "";
 if (localStorage.getItem('neon-hero-theme') === 'light') {
     document.body.classList.add('light-mode');
@@ -954,7 +978,6 @@ closeSettingsBtn.addEventListener('click', () => {
     updateKeyConfigUI();
 });
 
-// デフォルトリセット
 resetKeysBtn.addEventListener('click', () => {
     keyBindings = [...DEFAULT_KEYS];
     localStorage.setItem('neon-hero-keys', JSON.stringify(keyBindings));
@@ -962,7 +985,6 @@ resetKeysBtn.addEventListener('click', () => {
     showToast(uiText.msg_reset_done);
 });
 
-// スキップ処理
 function skipIntro() {
     if (ytPlayer && notes.length > 0) {
         const firstNoteTime = notes[0].time;
@@ -1100,7 +1122,10 @@ async function renderLibrary(mode) {
     sharedListFull.innerHTML = displayList.map(v => `
         <div class="shared-item-full" data-id="${v.videoId}">
             <span class="play-count-badge">${v.playCount}${uiText.plays_suffix}</span>
-            <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
+            <div class="thumbnail-container">
+                <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
+                ${v.duration ? `<span class="duration-badge">${formatDuration(v.duration)}</span>` : ""}
+            </div>
             <div class="shared-item-info">
                 <div class="shared-item-title">${v.title || "Untitled Track"}</div>
             </div>
@@ -1136,7 +1161,8 @@ function loadYoutube(vidId) {
                 startBtn.disabled = false;
                 ytShareBtn.classList.remove('hidden');
                 updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
-                window.registerSharedVideo(vidId, ytPlayer.getVideoData().title);
+                // 再生時間を含めて登録
+                window.registerSharedVideo(vidId, ytPlayer.getVideoData().title, Math.floor(duration));
                 e.target.unMute();
                 e.target.setVolume(50); 
             },
@@ -1241,27 +1267,18 @@ function applyVisualHit(judg, laneIdx) {
 function draw() {
     pollGamepad();
     const now = getCurrentTimeMs();
-    
-    // スキップボタンの表示制御
     if (gameState === 'PLAYING' && notes.length > 0) {
         const firstNoteTime = notes[0].time;
-        if (now < firstNoteTime - 4000) {
-            skipIntroBtn.style.display = 'block';
-        } else {
-            skipIntroBtn.style.display = 'none';
-        }
+        skipIntroBtn.style.display = (now < firstNoteTime - 4000) ? 'block' : 'none';
     } else {
         skipIntroBtn.style.display = 'none';
     }
-
     if (gameState !== 'PLAYING') {
         if (gameState === 'START' || gameState === 'FINISHED') requestAnimationFrame(draw);
         return;
     }
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const laneWidth = canvas.width / LANE_COUNT, hitY = canvas.height * HIT_LINE_Y, config = DIFFICULTY_CONFIG[currentDiff], isLight = document.body.classList.contains('light-mode');
-
     for (let i = 0; i < LANE_COUNT; i++) {
         ctx.fillStyle = activeLanes[i] ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)') : 'rgba(128,128,128,0.02)';
         ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
