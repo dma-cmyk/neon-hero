@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ネオン・ヒーロー - 共有ライブラリ版</title>
+    <title>ネオン・ヒーロー - メニューランキング版</title>
     <style>
         :root {
             --bg-dark: #050510;
@@ -263,12 +263,15 @@
             color: #444; font-size: 14px; text-align: center;
         }
 
-        #ranking-container {
+        /* ランキング */
+        .ranking-container {
             width: 100%; max-width: 400px;
             background: rgba(0,0,0,0.5); border-radius: 15px; padding: 15px;
             margin-bottom: 20px; border: 1px solid rgba(0, 242, 255, 0.2);
             box-sizing: border-box;
         }
+
+        .ranking-list { width: 100%; }
 
         .ranking-item {
             display: flex; align-items: center; padding: 8px 0;
@@ -328,12 +331,15 @@
         <div id="judgment-text" class="judgment-display"></div>
     </div>
 
+    <!-- スタート画面 -->
     <div id="start-screen" class="overlay-screen">
         <h1 style="font-size: 32px; margin: 10px 0 20px 0; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon-cyan));">ネオン・ヒーロー</h1>
+        
         <div class="input-group">
             <span class="input-label">プレイヤーネーム</span>
             <input type="text" id="player-name" placeholder="名前を入力..." maxlength="12">
         </div>
+
         <div class="input-group">
             <span class="input-label">YouTube でプレイ</span>
             <input type="text" id="yt-url" placeholder="URLを貼り付けるかリストから選択">
@@ -347,6 +353,7 @@
             </div>
             <div id="yt-status" style="font-size: 11px; color: var(--neon-pink); margin-top: 5px; text-align: center; min-height: 14px;"></div>
         </div>
+
         <div class="input-group">
             <span class="input-label">難易度</span>
             <div class="diff-selector" id="diff-selector">
@@ -356,21 +363,33 @@
                 <button class="diff-btn" data-diff="expert">おに</button>
             </div>
         </div>
+
+        <!-- プレビューとランキングのセット -->
         <div id="preview-box">
             <div id="preview-placeholder">動画を読み込むと<br>ここに表示されます</div>
             <div id="preview-content"></div>
         </div>
+
+        <!-- メニュー用のランキング表示 -->
+        <div id="menu-ranking-container" class="ranking-container hidden">
+            <h3 style="font-size: 14px; margin: 0 0 10px 0; text-align: center; color: var(--neon-lime); letter-spacing: 1px;">この曲のランキング</h3>
+            <div id="menu-ranking-list" class="ranking-list"></div>
+        </div>
+
         <button class="btn" id="start-btn" disabled>準備完了</button>
     </div>
 
+    <!-- リザルト画面 -->
     <div id="result-screen" class="overlay-screen hidden">
         <h2 style="color: var(--neon-cyan); margin: 10px 0;">STAGE CLEAR!</h2>
         <div style="font-size: 52px; margin-bottom: 5px; color: #fff; text-shadow: 0 0 20px var(--neon-cyan);" id="final-score">0</div>
         <div id="stats-detail" style="text-align: center; font-size: 14px; color: #aaa; margin-bottom: 20px;"></div>
-        <div id="ranking-container">
+        
+        <div class="ranking-container">
             <h3 style="font-size: 16px; margin: 0 0 10px 0; text-align: center; color: var(--neon-cyan); letter-spacing: 2px;">RANKING</h3>
-            <div id="ranking-list"><div class="loader"></div></div>
+            <div id="result-ranking-list" class="ranking-list"><div class="loader"></div></div>
         </div>
+
         <button class="btn" id="retry-btn">メニューに戻る</button>
     </div>
 
@@ -403,12 +422,7 @@
         appId: "1:904605896059:web:87c5ab4437041e01e381de"
     };
 
-    // Geminiプレビュー環境か、GitHub Pages等の外部環境かを判別するロジック
-    // 外部環境の場合は myFirebaseConfig が使われます。
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-    
-    // 【appId について】
-    // Firestore上のデータフォルダ名になります。外部公開時は好きな名前に変えてください。
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'neon-hero-shared-v1';
     
     const app = initializeApp(firebaseConfig);
@@ -493,7 +507,9 @@ const comboText = document.getElementById('combo-text');
 const judgmentText = document.getElementById('judgment-text');
 const ytStatus = document.getElementById('yt-status');
 const diffSelector = document.getElementById('diff-selector');
-const rankingList = document.getElementById('ranking-list');
+const menuRankingContainer = document.getElementById('menu-ranking-container');
+const menuRankingList = document.getElementById('menu-ranking-list');
+const resultRankingList = document.getElementById('result-ranking-list');
 const playerNameInput = document.getElementById('player-name');
 const ytUrlInput = document.getElementById('yt-url');
 
@@ -525,12 +541,17 @@ let ytPlayer;
 
 playerNameInput.value = localStorage.getItem('neon-hero-player-name') || "";
 
+// 難易度切り替え時にもランキングを更新
 diffSelector.addEventListener('click', (e) => {
     if (e.target.classList.contains('diff-btn')) {
         document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('active'));
         e.target.classList.add('active');
         currentDiff = e.target.dataset.diff;
-        if (currentDuration > 0) notes = generateMap(currentDuration);
+        
+        if (currentDuration > 0) {
+            notes = generateMap(currentDuration);
+            updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
+        }
     }
 });
 
@@ -558,6 +579,7 @@ function loadYoutube(vidId) {
     previewPlaceholder.classList.add('hidden');
     previewContent.innerHTML = '<div id="yt-player-target"></div>';
     const safeOrigin = window.location.protocol === 'file:' ? 'https://www.youtube.com' : window.location.origin;
+    
     ytPlayer = new YT.Player('yt-player-target', {
         height: '100%', width: '100%', videoId: vidId,
         playerVars: { 'autoplay': 1, 'controls': 1, 'origin': safeOrigin, 'enablejsapi': 1, 'modestbranding': 1, 'mute': 1 },
@@ -571,6 +593,10 @@ function loadYoutube(vidId) {
                 ytStatus.innerText = "READY!";
                 startBtn.disabled = false;
                 ytShareBtn.classList.remove('hidden');
+                
+                // メニュー用のランキングを更新
+                updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
+                
                 const videoData = ytPlayer.getVideoData();
                 window.registerSharedVideo(vidId, videoData.title);
             },
@@ -791,17 +817,28 @@ async function endGame() {
     `;
     const pName = playerNameInput.value.trim() || "名無しのヒーロー";
     await window.saveGameScore({ playerName: pName, score: score, videoId: currentVideoId, difficulty: currentDiff });
-    updateRankingDisplay();
+    
+    // リザルト画面用のランキング更新
+    updateRankingDisplay(currentVideoId, currentDiff, resultRankingList);
 }
 
-async function updateRankingDisplay() {
-    rankingList.innerHTML = '<div class="loader"></div>';
-    const topScores = await window.fetchRankings(currentVideoId, currentDiff);
+/**
+ * 指定された要素にランキングを表示する汎用関数
+ */
+async function updateRankingDisplay(videoId, difficulty, listElement, containerElement = null) {
+    if (!videoId) return;
+    
+    listElement.innerHTML = '<div class="loader"></div>';
+    if (containerElement) containerElement.classList.remove('hidden');
+    
+    const topScores = await window.fetchRankings(videoId, difficulty);
+    
     if (topScores.length === 0) {
-        rankingList.innerHTML = '<div style="text-align:center; font-size:12px; color:#666;">記録がありません</div>';
+        listElement.innerHTML = '<div style="text-align:center; font-size:12px; color:#666; padding:10px;">記録がありません</div>';
         return;
     }
-    rankingList.innerHTML = topScores.map((item, index) => `
+    
+    listElement.innerHTML = topScores.map((item, index) => `
         <div class="ranking-item">
             <span class="ranking-rank">${index + 1}位</span>
             <span class="ranking-name">${item.playerName}</span>
