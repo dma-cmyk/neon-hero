@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ネオン・ヒーロー - 賑やか日本語版</title>
+    <title>ネオン・ヒーロー - プレビュー機能付き</title>
     <style>
         :root {
             --bg-dark: #050510;
@@ -40,7 +40,7 @@
             overflow: hidden;
         }
 
-        /* アニメーション付きグリッド背景 */
+        /* 背景グリッド */
         .grid-bg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -66,6 +66,7 @@
             to { background-position: 0 400px; }
         }
 
+        /* ゲーム本編の背景用（半透明） */
         #bg-video, #youtube-player-container {
             position: absolute;
             top: 0; left: 0;
@@ -73,6 +74,11 @@
             z-index: 0;
             opacity: 0.5;
             pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        #youtube-player-container iframe {
+            width: 100%; height: 100%; border: none;
         }
 
         canvas {
@@ -82,7 +88,7 @@
             z-index: 5;
         }
 
-        /* UI スタイル */
+        /* UI レイヤー */
         #ui-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -110,7 +116,6 @@
             color: var(--neon-pink);
             text-shadow: 0 0 30px var(--neon-pink);
             opacity: 0;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .judgment-display {
@@ -123,7 +128,7 @@
             letter-spacing: 4px;
         }
 
-        /* スクリーン */
+        /* メニュー画面 */
         #start-screen, #result-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -132,47 +137,47 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             z-index: 100;
-            padding: 30px;
+            padding: 20px;
             box-sizing: border-box;
             overflow-y: auto;
         }
 
         .btn {
-            padding: 12px 35px;
+            padding: 12px 30px;
             font-size: 18px;
             font-weight: bold;
-            text-transform: uppercase;
             background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 5px 20px rgba(255, 0, 122, 0.4);
             margin: 8px;
+            width: 80%;
+            max-width: 300px;
         }
 
         .btn:hover:not(:disabled) {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 30px rgba(255, 0, 122, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--neon-pink);
         }
 
-        .btn:disabled { background: #333; cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+        .btn:disabled { background: #333; cursor: not-allowed; opacity: 0.5; }
 
         .input-group {
             margin: 10px 0;
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
             background: rgba(255, 255, 255, 0.05);
             padding: 15px;
-            border-radius: 20px;
+            border-radius: 15px;
             border: 1px solid rgba(0, 242, 255, 0.2);
         }
 
         input[type="text"] {
-            width: 90%;
+            width: calc(100% - 24px);
             padding: 10px;
             border-radius: 10px;
             border: 1px solid #444;
@@ -182,31 +187,52 @@
             text-align: center;
         }
 
-        /* 難易度セレクター */
+        /* 難易度設定 */
         .diff-selector {
             display: flex;
             gap: 5px;
             justify-content: center;
-            margin-top: 5px;
         }
 
         .diff-btn {
-            padding: 8px 12px;
-            font-size: 12px;
-            border-radius: 15px;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.2);
             background: rgba(255,255,255,0.05);
             color: #aaa;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .diff-btn.active[data-diff="easy"] { background: var(--neon-lime); color: black; border-color: var(--neon-lime); box-shadow: 0 0 10px var(--neon-lime); }
-        .diff-btn.active[data-diff="normal"] { background: var(--neon-cyan); color: black; border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
-        .diff-btn.active[data-diff="hard"] { background: var(--neon-pink); color: white; border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
-        .diff-btn.active[data-diff="expert"] { background: var(--neon-purple); color: white; border-color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
+        .diff-btn.active[data-diff="easy"] { background: var(--neon-lime); color: black; box-shadow: 0 0 10px var(--neon-lime); }
+        .diff-btn.active[data-diff="normal"] { background: var(--neon-cyan); color: black; box-shadow: 0 0 10px var(--neon-cyan); }
+        .diff-btn.active[data-diff="hard"] { background: var(--neon-pink); color: white; box-shadow: 0 0 10px var(--neon-pink); }
+        .diff-btn.active[data-diff="expert"] { background: var(--neon-purple); color: white; box-shadow: 0 0 10px var(--neon-purple); }
 
-        /* 操作エリア */
+        /* プレビューエリア */
+        #preview-area {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            margin: 15px 0;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+        }
+
+        #preview-placeholder {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #444;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 操作パネル */
         #touch-controls {
             position: absolute;
             bottom: 0; left: 0; width: 100%; height: 160px;
@@ -223,7 +249,6 @@
             justify-content: center;
             font-size: 32px;
             color: rgba(255, 255, 255, 0.2);
-            transition: all 0.1s;
             user-select: none;
         }
 
@@ -234,15 +259,11 @@
             border-top: 3px solid var(--neon-cyan);
         }
 
-        /* アニメーションとユーティリティ */
         .hidden { display: none !important; }
         .loader {
-            border: 4px solid #333;
-            border-top: 4px solid var(--neon-cyan);
-            border-radius: 50%;
-            width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+            border: 4px solid #333; border-top: 4px solid var(--neon-cyan);
+            border-radius: 50%; width: 30px; height: 30px;
+            animation: spin 1s linear infinite; margin: 10px auto;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -256,10 +277,11 @@
 <body>
 
 <div id="game-container">
-    <!-- ビジュアル背景レイヤー -->
     <div class="grid-bg"><div class="grid-bg-inner"></div></div>
+    
+    <!-- ゲームプレイ時の背景（半透明） -->
     <video id="bg-video" playsinline class="hidden"></video>
-    <div id="youtube-player-container" class="hidden"><div id="yt-player"></div></div>
+    <div id="youtube-player-container" class="hidden"><div id="yt-player-game"></div></div>
     
     <canvas id="gameCanvas"></canvas>
     
@@ -269,7 +291,6 @@
         <div id="judgment-text" class="judgment-display"></div>
     </div>
 
-    <!-- 矢印操作パネル -->
     <div id="touch-controls">
         <div class="touch-btn" id="btn-0" data-key="ArrowLeft">←</div>
         <div class="touch-btn" id="btn-1" data-key="ArrowDown">↓</div>
@@ -277,28 +298,27 @@
         <div class="touch-btn" id="btn-3" data-key="ArrowRight">→</div>
     </div>
 
-    <!-- メニュー画面 -->
+    <!-- スタート画面 -->
     <div id="start-screen">
-        <h1 style="font-size: 36px; margin-bottom: 5px; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon-cyan));">ネオン・ヒーロー</h1>
-        <p style="color: #888; margin-top: 0; letter-spacing: 4px; font-size: 12px;">RHYTHM ACTION</p>
+        <h1 style="font-size: 32px; margin: 10px 0 0 0; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ネオン・ヒーロー</h1>
+        <p style="color: #666; font-size: 10px; letter-spacing: 3px; margin-bottom: 10px;">RHYTHM ACTION GAME</p>
         
         <div class="input-group">
             <input type="file" id="media-upload" accept="audio/*,video/*" style="display: none;">
-            <button class="btn" style="background: #222; width: 100%; border: 1px solid #444; font-size: 14px;" onclick="document.getElementById('media-upload').click()">ローカルファイルを選択</button>
-            <div id="file-name" style="font-size: 11px; color: var(--neon-lime); margin-top: 5px; text-align: center;">MP3 または MP4 を選択</div>
+            <button class="btn" style="background: #222; font-size: 14px; width: 100%; border: 1px solid #444;" onclick="document.getElementById('media-upload').click()">ローカルファイルを選択</button>
+            <div id="file-name" style="font-size: 11px; color: var(--neon-lime); margin-top: 5px; text-align: center;">MP3 / MP4 を選んでください</div>
         </div>
 
         <div class="input-group">
-            <input type="text" id="yt-url" placeholder="YouTubeのURLを貼り付け...">
+            <input type="text" id="yt-url" placeholder="YouTube URLを貼り付け...">
             <div style="display: flex; gap: 8px;">
                 <button class="btn" id="yt-load-btn" style="background: #333; margin: 0; flex: 1; font-size: 12px;">読み込む</button>
                 <button class="btn hidden" id="yt-share-btn" style="background: var(--neon-purple); margin: 0; flex: 1; font-size: 12px;">共有</button>
             </div>
-            <div id="yt-status" style="font-size: 11px; color: var(--neon-pink); margin-top: 5px; height: 14px;"></div>
+            <div id="yt-status" style="font-size: 11px; color: var(--neon-pink); margin-top: 5px; height: 14px; text-align: center;"></div>
         </div>
 
         <div class="input-group">
-            <p style="font-size: 12px; margin: 0 0 8px 0; color: #aaa;">難易度設定</p>
             <div class="diff-selector" id="diff-selector">
                 <button class="diff-btn" data-diff="easy">かんたん</button>
                 <button class="diff-btn active" data-diff="normal">ふつう</button>
@@ -307,20 +327,26 @@
             </div>
         </div>
 
-        <button class="btn" id="start-btn" disabled>準備完了</button>
-        <div style="margin-top: 10px; font-size: 10px; color: #666; line-height: 1.4;">
-            PC: 矢印キー [←][↓][↑][→] | スマホ: 画面下の矢印
+        <!-- プレビュー表示エリア -->
+        <div id="preview-area">
+            <div id="preview-placeholder">読み込み後にここに<br>動画が表示されます</div>
+            <!-- YouTube再生時にここにiframeが入る -->
+            <div id="yt-player-preview" style="width: 100%; height: 100%;"></div>
+            <!-- ローカルビデオ再生時にここに複製される -->
+            <video id="local-video-preview" style="width: 100%; height: 100%; object-fit: cover;" muted playsinline class="hidden"></video>
         </div>
+
+        <button class="btn" id="start-btn" disabled>準備完了</button>
+        
         <div id="origin-warning" class="hidden" style="color: var(--neon-lime); font-size: 10px; margin-top: 5px;">
-            注意: ローカルファイル実行時はYouTube再生が制限される場合があります。
+            ※file://環境ではYouTubeが制限される場合があります
         </div>
     </div>
 
-    <!-- リザルト画面 -->
     <div id="result-screen" class="hidden">
-        <h2 style="font-size: 32px; color: var(--neon-cyan);">ステージクリア！</h2>
-        <div style="font-size: 56px; margin: 10px 0; color: #fff; text-shadow: 0 0 20px var(--neon-cyan);" id="final-score">0</div>
-        <div id="stats-detail" style="text-align: center; margin-bottom: 25px; line-height: 1.6; color: #aaa;"></div>
+        <h2 style="color: var(--neon-cyan);">ステージクリア！</h2>
+        <div style="font-size: 48px; margin: 10px 0; color: #fff;" id="final-score">0</div>
+        <div id="stats-detail" style="text-align: center; margin-bottom: 20px; line-height: 1.5; font-size: 14px; color: #aaa;"></div>
         <button class="btn" id="retry-btn">メニューに戻る</button>
     </div>
 </div>
@@ -328,12 +354,14 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /**
- * ネオン・ヒーロー - 難易度設定版
+ * ネオン・ヒーロー - プレビュー機能追加版
  */
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const bgVideo = document.getElementById('bg-video');
+const previewVideo = document.getElementById('local-video-preview');
+const previewPlaceholder = document.getElementById('preview-placeholder');
 const startBtn = document.getElementById('start-btn');
 const ytLoadBtn = document.getElementById('yt-load-btn');
 const ytShareBtn = document.getElementById('yt-share-btn');
@@ -355,7 +383,6 @@ const JUDGMENT_MS = { PERFECT: 60, GREAT: 110, GOOD: 160, MISS: 250 };
 const HIT_LINE_Y = 0.82;
 const COLORS = ['#00f2ff', '#ff007a', '#bcff00', '#9d00ff'];
 
-// 難易度ごとのパラメータ
 const DIFFICULTY_CONFIG = {
     easy:   { speed: 0.45, interval: 450, prob: 0.35 },
     normal: { speed: 0.60, interval: 300, prob: 0.45 },
@@ -376,24 +403,21 @@ let particles = [];
 let currentVideoId = "";
 let currentDuration = 0;
 
-// 難易度選択イベント
+// YouTube API 関連
+let ytPlayer;
+
+// 難易度選択
 diffSelector.addEventListener('click', (e) => {
     if (e.target.classList.contains('diff-btn')) {
         document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('active'));
         e.target.classList.add('active');
         currentDiff = e.target.dataset.diff;
-        
-        // 既にメディアが読み込まれている場合は譜面を再生成
-        if (currentDuration > 0) {
-            notes = generateMap(currentDuration);
-        }
+        if (currentDuration > 0) notes = generateMap(currentDuration);
     }
 });
 
-// オーディオシステム
+// オーディオContext
 let audioCtx, analyser, frequencyData, audioBuffer, audioSource;
-let ytPlayer;
-
 function initAudioContext() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -411,20 +435,31 @@ mediaUpload.addEventListener('change', async (e) => {
     const isVideo = file.type.startsWith('video/');
     startBtn.disabled = true;
     ytShareBtn.classList.add('hidden');
+    previewPlaceholder.classList.add('hidden');
+
+    const fileURL = URL.createObjectURL(file);
 
     if (isVideo) {
         playMode = 'FILE_VIDEO';
-        bgVideo.src = URL.createObjectURL(file);
+        bgVideo.src = fileURL;
+        previewVideo.src = fileURL;
+        previewVideo.classList.remove('hidden');
+        document.getElementById('yt-player-preview').classList.add('hidden');
+
         bgVideo.onloadedmetadata = () => {
             currentDuration = bgVideo.duration;
             notes = generateMap(currentDuration);
             startBtn.disabled = false;
             startBtn.innerText = "動画でプレイ開始！";
             bgVideo.classList.remove('hidden');
-            ytContainer.classList.add('hidden');
         };
     } else {
         playMode = 'FILE_AUDIO';
+        previewVideo.classList.add('hidden');
+        document.getElementById('yt-player-preview').classList.add('hidden');
+        previewPlaceholder.innerText = "音楽ファイルを読み込みました\n" + file.name;
+        previewPlaceholder.classList.remove('hidden');
+
         initAudioContext();
         try {
             const arrayBuffer = await file.arrayBuffer();
@@ -434,9 +469,8 @@ mediaUpload.addEventListener('change', async (e) => {
             startBtn.disabled = false;
             startBtn.innerText = "音楽でプレイ開始！";
             bgVideo.classList.add('hidden');
-            ytContainer.classList.add('hidden');
         } catch (err) {
-            alert("オーディオの解析に失敗しました。");
+            alert("解析失敗");
         }
     }
 });
@@ -445,20 +479,28 @@ mediaUpload.addEventListener('change', async (e) => {
 function loadYoutube(vidId) {
     currentVideoId = vidId;
     ytStatus.innerHTML = '<div class="loader"></div>';
+    previewPlaceholder.classList.add('hidden');
+    previewVideo.classList.add('hidden');
+    document.getElementById('yt-player-preview').classList.remove('hidden');
+
     if (ytPlayer && ytPlayer.destroy) {
         try { ytPlayer.destroy(); } catch (e) {}
-        ytContainer.innerHTML = '<div id="yt-player"></div>';
+        document.getElementById('preview-area').innerHTML = `
+            <div id="preview-placeholder" class="hidden"></div>
+            <div id="yt-player-preview" style="width: 100%; height: 100%;"></div>
+            <video id="local-video-preview" style="width: 100%; height: 100%; object-fit: cover;" muted playsinline class="hidden"></video>
+        `;
     }
-    ytContainer.classList.remove('hidden');
+
     const safeOrigin = window.location.protocol === 'file:' ? 'https://www.youtube.com' : window.location.origin;
 
-    ytPlayer = new YT.Player('yt-player', {
+    ytPlayer = new YT.Player('yt-player-preview', {
         height: '100%', width: '100%', videoId: vidId,
         playerVars: { 'autoplay': 0, 'controls': 1, 'origin': safeOrigin, 'enablejsapi': 1 },
         events: {
             'onReady': (e) => {
                 const duration = e.target.getDuration();
-                if (duration === 0) { ytStatus.innerText = "再生制限のある動画です。"; return; }
+                if (duration === 0) { ytStatus.innerText = "再生制限があります。"; return; }
                 currentDuration = duration;
                 notes = generateMap(currentDuration);
                 playMode = 'YOUTUBE';
@@ -467,14 +509,14 @@ function loadYoutube(vidId) {
                 startBtn.innerText = "YouTubeでプレイ開始！";
                 ytShareBtn.classList.remove('hidden');
             },
-            'onError': () => { ytStatus.innerText = "エラーが発生しました。"; }
+            'onError': () => { ytStatus.innerText = "読み込みエラー"; }
         }
     });
 }
 
 ytLoadBtn.addEventListener('click', () => {
     const vidId = extractYoutubeId(document.getElementById('yt-url').value);
-    if (vidId) loadYoutube(vidId); else ytStatus.innerText = "無効なURLです。";
+    if (vidId) loadYoutube(vidId); else ytStatus.innerText = "無効なURL";
 });
 
 ytShareBtn.addEventListener('click', () => {
@@ -483,7 +525,7 @@ ytShareBtn.addEventListener('click', () => {
     tempInput.value = shareUrl;
     document.body.appendChild(tempInput); tempInput.select();
     document.execCommand("copy"); document.body.removeChild(tempInput);
-    showToast("共有リンクをコピーしました！");
+    showToast("共有リンクをコピー！");
 });
 
 function showToast(msg) {
@@ -503,15 +545,11 @@ function generateMap(durationSeconds) {
     const map = [];
     const config = DIFFICULTY_CONFIG[currentDiff];
     const totalMs = durationSeconds * 1000;
-    
-    // 難易度設定に基づいた譜面生成
     for (let t = 2500; t < totalMs - 2000; t += config.interval) {
         if (Math.random() < config.prob) {
             map.push({ time: t, lane: Math.floor(Math.random() * LANE_COUNT), hit: false });
-            
-            // Expertのみ同時押しの確率を追加
             if (currentDiff === 'expert' && Math.random() < 0.2) {
-                map.push({ time: t, lane: (Math.floor(Math.random() * LANE_COUNT)) % LANE_COUNT, hit: false });
+                map.push({ time: t, lane: (Math.floor(Math.random() * LANE_COUNT) + 1) % LANE_COUNT, hit: false });
             }
         }
     }
@@ -549,25 +587,20 @@ function checkHit(laneIdx) {
     const now = getCurrentTimeMs();
     let closestNote = null;
     let minDiff = Infinity;
-
     for (let n of notes) {
         if (n.lane === laneIdx && !n.hit) {
             const diff = Math.abs(n.time - now);
             if (diff < minDiff) { minDiff = diff; closestNote = n; }
         }
     }
-
     if (closestNote && minDiff < JUDGMENT_MS.MISS) {
         let judg = "";
         let pts = 0;
         if (minDiff < JUDGMENT_MS.PERFECT) { judg = "Perfect"; pts = 1000; stats.perfect++; }
         else if (minDiff < JUDGMENT_MS.GREAT) { judg = "Great"; pts = 700; stats.great++; }
         else if (minDiff < JUDGMENT_MS.GOOD) { judg = "Good"; pts = 400; stats.good++; }
-
         if (judg) {
-            closestNote.hit = true;
-            score += pts;
-            combo++;
+            closestNote.hit = true; score += pts; combo++;
             maxCombo = Math.max(combo, maxCombo);
             applyVisualHit(judg, laneIdx);
         }
@@ -579,15 +612,11 @@ function applyVisualHit(judg, laneIdx) {
     judgmentText.innerText = judg;
     judgmentText.style.color = COLORS[laneIdx % COLORS.length];
     judgmentText.style.textShadow = `0 0 20px ${COLORS[laneIdx % COLORS.length]}`;
-    
     judgmentText.style.transform = 'scale(1.5)';
     setTimeout(() => judgmentText.style.transform = 'scale(1)', 100);
-
     if (combo >= 3) {
         comboText.innerText = combo;
         comboText.style.opacity = "1";
-        comboText.style.transform = "scale(1.2)";
-        setTimeout(() => comboText.style.transform = "scale(1)", 50);
     }
     createParticles(laneIdx);
 }
@@ -595,14 +624,9 @@ function applyVisualHit(judg, laneIdx) {
 function createParticles(laneIdx) {
     const x = (laneIdx + 0.5) * (canvas.width / LANE_COUNT);
     const y = canvas.height * HIT_LINE_Y;
-    const color = COLORS[laneIdx];
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 12; i++) {
         particles.push({
-            x, y, 
-            vx: (Math.random() - 0.5) * 20, 
-            vy: (Math.random() - 0.5) * 20, 
-            life: 1.0, 
-            color: color
+            x, y, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15, life: 1.0, color: COLORS[laneIdx]
         });
     }
 }
@@ -610,108 +634,62 @@ function createParticles(laneIdx) {
 function draw() {
     if (gameState !== 'PLAYING') return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     const now = getCurrentTimeMs();
     const laneWidth = canvas.width / LANE_COUNT;
     const hitY = canvas.height * HIT_LINE_Y;
     const config = DIFFICULTY_CONFIG[currentDiff];
 
-    let pulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
-
-    // レーン描画
     for (let i = 0; i < LANE_COUNT; i++) {
-        ctx.fillStyle = activeLanes[i] ? `rgba(${i*50}, 242, 255, 0.2)` : 'rgba(255, 255, 255, 0.03)';
+        ctx.fillStyle = activeLanes[i] ? `rgba(${i*50}, 242, 255, 0.15)` : 'rgba(255, 255, 255, 0.02)';
         ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
-        
-        ctx.strokeStyle = 'rgba(0, 242, 255, 0.1)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(i * laneWidth, 0); ctx.lineTo(i * laneWidth, canvas.height); ctx.stroke();
-
-        const color = COLORS[i];
-        ctx.shadowBlur = activeLanes[i] ? 20 : 5;
-        ctx.shadowColor = color;
-        ctx.strokeStyle = activeLanes[i] ? color : 'rgba(255, 255, 255, 0.2)';
-        ctx.lineWidth = activeLanes[i] ? 5 : 2;
-        ctx.beginPath();
-        ctx.moveTo(i * laneWidth + 10, hitY); ctx.lineTo((i + 1) * laneWidth - 10, hitY);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
+        ctx.strokeStyle = activeLanes[i] ? COLORS[i] : 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = activeLanes[i] ? 4 : 1;
+        ctx.beginPath(); ctx.moveTo(i * laneWidth + 10, hitY); ctx.lineTo((i + 1) * laneWidth - 10, hitY); ctx.stroke();
     }
 
-    // ノーツ描画 (難易度ごとのスピードを適用)
     notes.forEach(note => {
         if (note.hit) return;
         const timeDiff = note.time - now;
         const y = hitY - (timeDiff * config.speed);
-
         if (y > -100 && y < canvas.height + 100) {
-            const color = COLORS[note.lane];
-            ctx.fillStyle = color;
-            ctx.shadowBlur = 15 * pulse;
-            ctx.shadowColor = color;
-            
+            ctx.fillStyle = COLORS[note.lane];
             ctx.beginPath();
-            const nx = note.lane * laneWidth + 15;
-            const nw = laneWidth - 30;
-            ctx.roundRect(nx, y - 12, nw, 24, 8);
+            ctx.roundRect(note.lane * laneWidth + 15, y - 10, laneWidth - 30, 20, 5);
             ctx.fill();
-
-            ctx.fillStyle = "rgba(255,255,255,0.4)";
-            ctx.beginPath();
-            ctx.roundRect(nx + 5, y - 8, nw - 10, 6, 4);
-            ctx.fill();
-
-            ctx.shadowBlur = 0;
         }
-
         if (timeDiff < -JUDGMENT_MS.MISS && !note.hit) {
-            note.hit = true;
-            combo = 0; stats.miss++;
-            judgmentText.innerText = "Miss"; judgmentText.style.color = "#666";
-            judgmentText.style.textShadow = "none";
-            comboText.style.opacity = "0";
+            note.hit = true; combo = 0; stats.miss++;
+            judgmentText.innerText = "Miss"; comboText.style.opacity = "0";
         }
     });
 
-    // パーティクル
     particles = particles.filter(p => p.life > 0);
     particles.forEach(p => {
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.shadowBlur = 10 * p.life;
-        ctx.shadowColor = p.color;
-        ctx.beginPath(); ctx.arc(p.x, p.y, 2 + p.life * 4, 0, Math.PI*2); ctx.fill();
-        p.x += p.vx; p.y += p.vy; p.vy += 0.5; 
-        p.life -= 0.025;
+        ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.life -= 0.03;
     });
     ctx.globalAlpha = 1.0;
-    ctx.shadowBlur = 0;
 
     let isEnded = false;
     if (playMode === 'YOUTUBE' && ytPlayer?.getPlayerState?.() === YT.PlayerState.ENDED) isEnded = true;
     if (playMode === 'FILE_VIDEO' && bgVideo.ended) isEnded = true;
     if (playMode === 'FILE_AUDIO' && audioBuffer && now > audioBuffer.duration * 1000 + 1000) isEnded = true;
-
-    if (isEnded) endGame();
-    else requestAnimationFrame(draw);
+    if (isEnded) endGame(); else requestAnimationFrame(draw);
 }
 
 function startGame() {
     score = 0; combo = 0; maxCombo = 0;
     stats = { perfect: 0, great: 0, good: 0, miss: 0 };
-    particles = [];
-    scoreVal.innerText = "000000";
-    judgmentText.innerText = "";
-    comboText.style.opacity = "0";
-    
-    // ゲーム開始時に再度譜面を生成（最新の難易度設定を反映）
+    particles = []; scoreVal.innerText = "000000"; judgmentText.innerText = "";
     notes = generateMap(currentDuration);
 
     startScreen.classList.add('hidden');
     resultScreen.classList.add('hidden');
     
     if (playMode === 'YOUTUBE' && ytPlayer) {
-        try { ytPlayer.playVideo(); } catch(e) {}
+        // プレビューのプレイヤーをそのまま使用
+        ytPlayer.playVideo();
     } else if (playMode === 'FILE_VIDEO') {
         bgVideo.currentTime = 0; bgVideo.play();
     } else if (playMode === 'FILE_AUDIO') {
@@ -720,10 +698,8 @@ function startGame() {
         audioSource = audioCtx.createBufferSource();
         audioSource.buffer = audioBuffer;
         audioSource.connect(analyser); analyser.connect(audioCtx.destination);
-        gameStartTime = audioCtx.currentTime;
-        audioSource.start(0);
+        gameStartTime = audioCtx.currentTime; audioSource.start(0);
     }
-
     gameState = 'PLAYING';
     requestAnimationFrame(draw);
 }
@@ -736,28 +712,20 @@ function endGame() {
         <span style="color:var(--neon-cyan)">PERFECT: ${stats.perfect}</span><br>
         <span style="color:var(--neon-pink)">GREAT: ${stats.great}</span><br>
         <span style="color:var(--neon-lime)">GOOD: ${stats.good}</span><br>
-        <span style="color:#666">MISS: ${stats.miss}</span><br><br>
-        最大コンボ: <span style="color:white; font-size: 20px;">${maxCombo}</span><br>
-        難易度: <span style="color:var(--neon-cyan)">${currentDiff.toUpperCase()}</span>
+        最大コンボ: ${maxCombo}<br>
+        難易度: ${currentDiff.toUpperCase()}
     `;
     if (audioSource) { try { audioSource.stop(); } catch(e){} }
 }
 
 window.addEventListener('keydown', (e) => handleKeyDown(e.key));
 window.addEventListener('keyup', (e) => handleKeyUp(e.key));
-
 document.querySelectorAll('.touch-btn').forEach(btn => {
     btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleKeyDown(btn.dataset.key); });
     btn.addEventListener('touchend', (e) => { e.preventDefault(); handleKeyUp(btn.dataset.key); });
 });
-
 startBtn.addEventListener('click', startGame);
-retryBtn.addEventListener('click', () => {
-    resultScreen.classList.add('hidden');
-    startScreen.classList.remove('hidden');
-    if (ytPlayer?.stopVideo) ytPlayer.stopVideo();
-    if (bgVideo) bgVideo.pause();
-});
+retryBtn.addEventListener('click', () => location.reload()); // 簡単のためリロードで戻る
 
 function resize() {
     const container = document.getElementById('game-container');
