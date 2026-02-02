@@ -12,6 +12,11 @@
 *   **Repository Name:** `neon-hero`
 *   **Description:** A browser-based cyberpunk rhythm game that generates charts from YouTube videos or local media files. (YouTubeの動画やローカルファイルから譜面を生成して遊べる、ブラウザベースのサイバーパンク風リズムゲーム。)
 
+## 🚀 Live Demo (ライブデモ)
+
+You can play Neon Hero live on GitHub Pages:
+[https://dma-cmyk.github.io/neon-hero/](https://dma-cmyk.github.io/neon-hero/)
+
 ## ✨ Features (特徴)
 
 *   **Dynamic Chart Generation:** Automatically generates note patterns based on the duration of the media.
@@ -22,7 +27,7 @@
     *   **PC:** Play using keyboard arrow keys.
     *   **Mobile:** Touch controls optimized for smartphones.
 *   **Neon Visuals:** Stylish glowing graphics and animations using HTML5 Canvas.
-*   **Sharing:** Share your favorite YouTube tracks via URL parameters (e.g., `?v=VIDEO_ID`).
+*   **Sharing:** Share your favorite YouTube tracks via URL parameters (e.g., `https://dma-cmyk.github.io/neon-hero/?v=VIDEO_ID`).
 
 ## 🕹️ How to Play (遊び方)
 
