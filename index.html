@@ -123,13 +123,13 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 2;
-            pointer-events: none;
+            pointer-events: auto; /* YouTubeのボタンを押せるようにする */
             opacity: 0;
             transition: opacity 0.8s ease;
         }
 
         #game-container.is-playing #media-bg-container {
-            opacity: 0.45;
+            opacity: 0.6; /* スキップボタンが見えやすいよう少し不透明度を上げる */
         }
 
         #youtube-player-container {
@@ -142,6 +142,7 @@
             width: 100%; height: 100%;
             z-index: 5;
             background: transparent;
+            pointer-events: none; /* ノーツ画面を透過させて動画をクリックできるようにする */
         }
 
         #theme-toggle {
@@ -161,6 +162,27 @@
             font-size: 22px;
         }
         #theme-toggle:hover { transform: rotate(15deg) scale(1.1); box-shadow: 0 0 20px var(--neon-cyan); }
+
+        #skip-intro-btn {
+            position: absolute;
+            top: 70px;
+            right: 15px;
+            z-index: 150;
+            background: var(--panel-bg);
+            border: 1.5px solid var(--neon-lime);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            display: none;
+            transition: all 0.2s ease;
+        }
+        #skip-intro-btn:hover { background: var(--neon-lime); color: #000; box-shadow: 0 0 15px var(--neon-lime); }
 
         #ui-layer {
             position: absolute;
@@ -412,7 +434,6 @@
         }
         .tab-btn.active { opacity: 1; background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
 
-        /* キー設定UI */
         .key-config-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -440,11 +461,11 @@
         .key-name { font-size: 20px; color: var(--neon-cyan); }
 
         #touch-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 160px; display: grid; grid-template-columns: repeat(4, 1fr); z-index: 20; }
-        .touch-btn { background: linear-gradient(to bottom, transparent, rgba(128, 128, 128, 0.08)); border-top: 1px solid rgba(128, 128, 128, 0.15); display: flex; align-items: center; justify-content: center; font-size: 38px; color: rgba(128, 128, 128, 0.4); user-select: none; transition: all 0.15s; }
+        .touch-btn { background: linear-gradient(to bottom, transparent, rgba(128, 128, 128, 0.08)); border-top: 1px solid rgba(128, 128, 128, 0.15); display: flex; align-items: center; justify-content: center; font-size: 38px; color: rgba(128, 128, 128, 0.4); user-select: none; transition: all 0.15s; pointer-events: auto; }
         .touch-btn.active { background: rgba(0, 242, 255, 0.15); color: var(--neon-cyan); border-top: 5px solid var(--neon-cyan); text-shadow: 0 0 20px var(--neon-cyan); }
 
         .hidden { display: none !important; }
-        .loader { border: 4px solid rgba(128,128,128,0.2); border-top: 4px solid var(--neon-cyan); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto; }
+        .loader { border: 4px solid rgba(128,128,128,0.2); border-top: 4px solid var(--neon-cyan); border-radius: 50%; width: 28px; height: 28px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .toast { position: fixed; top: 30px; background: var(--neon-purple); color: white; padding: 16px 32px; border-radius: 50px; z-index: 300; font-weight: 900; box-shadow: 0 15px 35px var(--shadow-color); border: 2px solid rgba(255,255,255,0.2); }
@@ -458,6 +479,7 @@
     <canvas id="gameCanvas"></canvas>
     
     <button id="theme-toggle" title="Switch Theme">🌙</button>
+    <button id="skip-intro-btn" data-i18n="btn_skip_intro">イントロをスキップ</button>
 
     <div id="ui-layer">
         <div class="score-display"><span data-i18n="score_label">スコア</span>: <span id="score-val">000000</span></div>
@@ -591,12 +613,12 @@
     import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const myFirebaseConfig = {
-        apiKey: "AIzaSyBiCTU35eBaVXhTfnd-XDifHDDxXZALQCM",
-        authDomain: "neon-hero-2b368.firebaseapp.com",
-        projectId: "neon-hero-2b368",
-        storageBucket: "neon-hero-2b368.firebasestorage.app",
-        messagingSenderId: "904605896059",
-        appId: "1:904605896059:web:87c5ab4437041e01e381de"
+        apiKey: "YOUR_API_KEY", 
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "...",
+        appId: "..."
     };
 
     const firebaseConfig = (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) 
@@ -730,7 +752,8 @@ const translations = {
         label_key_config: "キーボード設定",
         label_gamepad: "ゲームパッド状態",
         msg_gamepad_on: "接続済み",
-        msg_gamepad_off: "未接続"
+        msg_gamepad_off: "未接続",
+        btn_skip_intro: "イントロをスキップ"
     },
     en: {
         score_label: "SCORE",
@@ -771,7 +794,8 @@ const translations = {
         label_key_config: "KEYBOARD CONFIG",
         label_gamepad: "GAMEPAD STATUS",
         msg_gamepad_on: "CONNECTED",
-        msg_gamepad_off: "DISCONNECTED"
+        msg_gamepad_off: "DISCONNECTED",
+        btn_skip_intro: "SKIP INTRO"
     }
 };
 
@@ -788,6 +812,7 @@ const openSettingsBtn = document.getElementById('open-settings-btn');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 const openLibraryBtn = document.getElementById('open-library-btn');
 const closeLibraryBtn = document.getElementById('close-library-btn');
+const skipIntroBtn = document.getElementById('skip-intro-btn');
 const startBtn = document.getElementById('start-btn');
 const ytLoadBtn = document.getElementById('yt-load-btn');
 const ytShareBtn = document.getElementById('yt-share-btn');
@@ -811,7 +836,6 @@ const libraryTabs = document.getElementById('library-tabs');
 const gamepadStatus = document.getElementById('gamepad-status');
 
 const LANE_COUNT = 4;
-const KEY_MAP = { 'arrowleft': 0, 'arrowdown': 1, 'arrowup': 2, 'arrowright': 3 };
 const JUDGMENT_MS = { PERFECT: 60, GREAT: 110, GOOD: 160, MISS: 250 };
 const HIT_LINE_Y = 0.82;
 const CORE_COLORS = ['#00f2ff', '#ff007a', '#bcff00', '#9d00ff'];
@@ -893,6 +917,17 @@ closeSettingsBtn.addEventListener('click', () => {
     document.querySelectorAll('.key-bind-btn').forEach(b => b.classList.remove('waiting'));
     updateKeyConfigUI();
 });
+
+// スキップ処理
+function skipIntro() {
+    if (ytPlayer && notes.length > 0) {
+        const firstNoteTime = notes[0].time;
+        const seekTarget = Math.max(0, (firstNoteTime - 2000) / 1000);
+        ytPlayer.seekTo(seekTarget, true);
+        skipIntroBtn.style.display = 'none';
+    }
+}
+skipIntroBtn.addEventListener('click', skipIntro);
 
 function pollGamepad() {
     const gamepads = navigator.getGamepads();
@@ -1130,7 +1165,7 @@ function checkHit(laneIdx) {
         }
     }
     if (closestNote && minDiff < JUDGMENT_MS.MISS) {
-        let judg = "", pts = 0;
+        let judg = ""; pts = 0;
         if (minDiff < JUDGMENT_MS.PERFECT) { judg = "Perfect"; pts = 1000; stats.perfect++; }
         else if (minDiff < JUDGMENT_MS.GREAT) { judg = "Great"; pts = 700; stats.great++; }
         else if (minDiff < JUDGMENT_MS.GOOD) { judg = "Good"; pts = 400; stats.good++; }
@@ -1159,12 +1194,27 @@ function applyVisualHit(judg, laneIdx) {
 
 function draw() {
     pollGamepad();
+    const now = getCurrentTimeMs();
+    
+    // スキップボタンの表示制御
+    if (gameState === 'PLAYING' && notes.length > 0) {
+        const firstNoteTime = notes[0].time;
+        if (now < firstNoteTime - 4000) {
+            skipIntroBtn.style.display = 'block';
+        } else {
+            skipIntroBtn.style.display = 'none';
+        }
+    } else {
+        skipIntroBtn.style.display = 'none';
+    }
+
     if (gameState !== 'PLAYING') {
         if (gameState === 'START' || gameState === 'FINISHED') requestAnimationFrame(draw);
         return;
     }
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const now = getCurrentTimeMs(), laneWidth = canvas.width / LANE_COUNT, hitY = canvas.height * HIT_LINE_Y, config = DIFFICULTY_CONFIG[currentDiff], isLight = document.body.classList.contains('light-mode');
+    const laneWidth = canvas.width / LANE_COUNT, hitY = canvas.height * HIT_LINE_Y, config = DIFFICULTY_CONFIG[currentDiff], isLight = document.body.classList.contains('light-mode');
 
     for (let i = 0; i < LANE_COUNT; i++) {
         ctx.fillStyle = activeLanes[i] ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)') : 'rgba(128,128,128,0.02)';
@@ -1204,7 +1254,9 @@ async function startGame() {
     notes = generateMap(currentDuration);
     startScreen.classList.add('hidden'); resultScreen.classList.add('hidden'); gameContainer.classList.add('is-playing');
     if (ytPlayer) {
-        window.recordPlay(currentVideoId, ytPlayer.getVideoData().title);
+        if (typeof window.recordPlay === 'function') {
+            window.recordPlay(currentVideoId, ytPlayer.getVideoData().title);
+        }
         mediaBgContainer.innerHTML = '';
         const playerDiv = document.getElementById('preview-content').children[0];
         if (playerDiv) {
@@ -1213,6 +1265,7 @@ async function startGame() {
             ytPlayer.setVolume(100);
             ytPlayer.seekTo(0);
             ytPlayer.playVideo();
+            setTimeout(() => { if (ytPlayer) { ytPlayer.unMute(); ytPlayer.setVolume(100); } }, 500);
         }
     }
     gameState = 'PLAYING';

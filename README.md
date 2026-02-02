@@ -1,16 +1,18 @@
-# Neon Hero (ネオン・ヒーロー)
+# Neon Hero - Prism Edition (ネオン・ヒーロー：プリズム・エディション)
 
-**Neon Hero** is a browser-based rhythm action game with a vibrant cyberpunk aesthetic. Play with your favorite music from YouTube or local files!
+**Neon Hero** is a browser-based rhythm action game with a vibrant cyberpunk aesthetic. Play with your favorite music from YouTube!
+This **Prism Edition** introduces new themes, global rankings, and enhanced community features.
 
-**ネオン・ヒーロー**は、鮮やかなサイバーパンク・スタイルのブラウザベースのリズムアクションゲームです。YouTubeの動画やローカルの音楽ファイルを使って、お気に入りの曲で遊ぶことができます！
+**ネオン・ヒーロー**は、鮮やかなサイバーパンク・スタイルのブラウザベースのリズムアクションゲームです。YouTubeの動画を使って、お気に入りの曲で遊ぶことができます！
+**プリズム・エディション**では、新テーマ、グローバルランキング、コミュニティ機能が追加されました。
 
-![Neon Hero Screenshot](https://via.placeholder.com/800x450?text=Neon+Hero+Gameplay) 
+![Neon Hero Screenshot](https://via.placeholder.com/800x450?text=Neon+Hero+Prism+Edition) 
 *(Screenshots coming soon / スクリーンショットは準備中です)*
 
 ## 🎮 Repository Info
 
 *   **Repository Name:** `neon-hero`
-*   **Description:** A browser-based cyberpunk rhythm game that generates charts from YouTube videos or local media files. (YouTubeの動画やローカルファイルから譜面を生成して遊べる、ブラウザベースのサイバーパンク風リズムゲーム。)
+*   **Description:** A browser-based cyberpunk rhythm game that generates charts from YouTube videos. Features global rankings and theme customization. (YouTubeの動画から譜面を生成して遊べる、ブラウザベースのサイバーパンク風リズムゲーム。ランキングやテーマ変更機能を搭載。)
 
 ## 🚀 Live Demo (ライブデモ)
 
@@ -19,15 +21,19 @@ You can play Neon Hero live on GitHub Pages:
 
 ## ✨ Features (特徴)
 
-*   **Dynamic Chart Generation:** Automatically generates note patterns based on the duration of the media.
-*   **Multiple Media Sources:**
-    *   **YouTube:** Paste a URL to play with any video.
-    *   **Local Files:** Upload MP3 or MP4 files from your device.
-*   **Cross-Platform:**
-    *   **PC:** Play using keyboard arrow keys.
-    *   **Mobile:** Touch controls optimized for smartphones.
-*   **Neon Visuals:** Stylish glowing graphics and animations using HTML5 Canvas.
-*   **Sharing:** Share your favorite YouTube tracks via URL parameters (e.g., `https://dma-cmyk.github.io/neon-hero/?v=VIDEO_ID`).
+*   **Dynamic Chart Generation (動的譜面生成):** Automatically generates note patterns based on the video duration and selected difficulty.
+*   **Dual Themes (デュアルテーマ):**
+    *   **Deep Space Neon (Dark):** The classic cyberpunk look.
+    *   **Opal Prism (Light):** A bright, clean aesthetic for a fresh experience.
+*   **Global Ranking (グローバルランキング):** Compete with players worldwide! Supports player names, secure tripcodes, and comments.
+*   **Shared Library (共有ライブラリ):** Discover popular tracks played by the community (Daily, Weekly, Monthly rankings).
+*   **Multiple Inputs (多様な操作):**
+    *   **Keyboard:** Fully customizable key bindings.
+    *   **Touch:** Optimized for mobile play.
+    *   **Gamepad:** Connect your controller for an arcade-like experience.
+*   **Quality of Life:**
+    *   **Intro Skip:** Jump straight to the music for videos with long intros.
+    *   **Share URL:** Share your favorite charts with a simple link.
 
 ## 🕹️ How to Play (遊び方)
 
@@ -36,12 +42,15 @@ The goal is to hit the falling notes at the right timing as they reach the judgm
 
 ### Controls (操作方法)
 
-| Lane | PC (Keyboard) | Mobile (Touch) |
-| :--- | :--- | :--- |
-| **Left (左)** | `Left Arrow (←)` | Tap Left Button |
-| **Down (下)** | `Down Arrow (↓)` | Tap Down Button |
-| **Up (上)** | `Up Arrow (↑)` | Tap Up Button |
-| **Right (右)** | `Right Arrow (→)` | Tap Right Button |
+Default controls (customizable in settings):
+デフォルトの操作（設定で変更可能）:
+
+| Lane | PC (Keyboard) | Mobile (Touch) | Gamepad |
+| :--- | :--- | :--- | :--- |
+| **Left (左)** | `Left Arrow (←)` | Tap Left Button | `Button 14` / `Button 0` |
+| **Down (下)** | `Down Arrow (↓)` | Tap Down Button | `Button 13` / `Button 1` |
+| **Up (上)** | `Up Arrow (↑)` | Tap Up Button | `Button 12` / `Button 3` |
+| **Right (右)** | `Right Arrow (→)` | Tap Right Button | `Button 15` / `Button 2` |
 
 ### Judgments (判定)
 
@@ -52,14 +61,11 @@ The goal is to hit the falling notes at the right timing as they reach the judgm
 
 ## 🚀 Getting Started (始め方)
 
-Since this project uses modern web features (AudioContext, Local File Access), it is recommended to run it via a local web server rather than opening `index.html` directly, although basic features may work directly.
+Since this project uses modern web features (AudioContext, Firebase), it is recommended to run it via a local web server.
 
-モダンなWeb機能（AudioContextなど）を使用しているため、ローカルWebサーバー経由での実行を推奨します。
+モダンなWeb機能（AudioContext, Firebaseなど）を使用しているため、ローカルWebサーバー経由での実行を推奨します。
 
 ### Quick Start with Python
-
-If you have Python installed:
-Pythonがインストールされている場合:
 
 ```bash
 # Run server in the project directory
@@ -73,20 +79,16 @@ python -m http.server
 
 ### Quick Start with Node.js
 
-If you have Node.js installed:
-Node.jsがインストールされている場合:
-
 ```bash
 npx serve .
 ```
 
 ## 🛠️ Technologies (使用技術)
 
-*   **HTML5 / CSS3** (Grid, Flexbox, CSS Variables)
-*   **JavaScript (ES6+)**
-*   **HTML5 Canvas API** (Rendering game visuals)
-*   **Web Audio API** (Audio processing)
-*   **YouTube IFrame Player API** (Video streaming)
+*   **Front-end:** HTML5, CSS3 (Variables, Grid, Flexbox), JavaScript (ES6+)
+*   **Graphics:** HTML5 Canvas API
+*   **Audio/Video:** Web Audio API, YouTube IFrame Player API
+*   **Backend (BaaS):** Firebase (Authentication, Firestore) for rankings and library features.
 
 ## 📄 License
 
