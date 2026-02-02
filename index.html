@@ -280,6 +280,7 @@
             margin-bottom: 20px;
             box-sizing: border-box;
             box-shadow: 0 10px 30px var(--shadow-color);
+            flex-shrink: 0;
         }
 
         .input-label {
@@ -359,10 +360,13 @@
             position: relative;
             box-shadow: 0 15px 40px var(--shadow-color);
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         #preview-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 14px; text-align: center; font-weight: 800; }
         
-        #preview-content { width: 100%; height: 100%; position: relative; }
+        #preview-content { width: 100%; height: 100%; position: relative; overflow: hidden; pointer-events: auto; }
         #preview-content iframe {
             position: absolute;
             top: 0;
@@ -378,6 +382,7 @@
             margin-bottom: 30px; border: 1.5px solid var(--panel-border);
             box-sizing: border-box;
             box-shadow: 0 10px 30px var(--shadow-color);
+            flex-shrink: 0;
         }
         .ranking-item { display: flex; flex-direction: column; padding: 14px 0; border-bottom: 1px solid rgba(128,128,128,0.15); }
         .ranking-item:last-child { border-bottom: none; }
@@ -435,6 +440,7 @@
             margin-bottom: 15px; border-bottom: 1px solid var(--panel-border);
             padding-bottom: 10px; overflow-x: auto;
             scrollbar-width: none;
+            flex-shrink: 0; /* タブが潰れないように固定 */
         }
         .library-tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
@@ -500,7 +506,7 @@
 
     <!-- スタート画面 -->
     <div id="start-screen" class="overlay-screen">
-        <h1 style="font-size: 38px; margin: 15px 0 30px 0; background: linear-gradient(to bottom, var(--text-color), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 10px var(--shadow-color)); text-align: center; font-weight: 900; letter-spacing: 4px;">NEON HERO</h1>
+        <h1 style="font-size: 38px; margin: 15px 0 30px 0; background: linear-gradient(to bottom, var(--text-color), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 10px var(--shadow-color)); text-align: center; font-weight: 900; letter-spacing: 4px; flex-shrink: 0;">NEON HERO</h1>
         
         <div class="input-group">
             <span class="input-label" data-i18n="label_player_info">プレイヤー登録</span>
@@ -540,16 +546,16 @@
             <div id="menu-ranking-list" class="ranking-list"></div>
         </div>
 
-        <div style="display: flex; gap: 15px; width: 100%; max-width: 340px;">
-            <button class="btn" id="start-btn" disabled data-i18n="btn_ready" style="flex: 2;">準備完了</button>
-            <button class="btn" id="open-settings-btn" style="flex: 1; background: var(--panel-bg); border: 1px solid var(--neon-cyan); color: var(--text-color);">⚙️</button>
+        <div style="display: flex; gap: 15px; width: 100%; max-width: 340px; flex-shrink: 0; padding-bottom: 20px;">
+            <button class="btn" id="start-btn" disabled data-i18n="btn_ready" style="flex: 2; margin-bottom: 0;">準備完了</button>
+            <button class="btn" id="open-settings-btn" style="flex: 1; background: var(--panel-bg); border: 1px solid var(--neon-cyan); color: var(--text-color); margin-bottom: 0;">⚙️</button>
         </div>
     </div>
 
     <!-- 設定画面 -->
     <div id="settings-modal" class="modal">
         <div class="modal-content" style="width: 100%; max-width: 450px; display: flex; flex-direction: column; height: 100%;">
-            <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900;" data-i18n="settings_title">操作設定</h2>
+            <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900; flex-shrink: 0;" data-i18n="settings_title">操作設定</h2>
             
             <div class="input-group" style="margin-top: 25px;">
                 <span class="input-label" data-i18n="label_key_config">キーボード設定</span>
@@ -571,7 +577,6 @@
                         <span class="key-name" id="key-name-3">RIGHT</span>
                     </button>
                 </div>
-                <!-- リセットボタン -->
                 <button class="btn" id="reset-keys-btn" style="background: rgba(255, 0, 122, 0.15); border: 1px solid var(--neon-pink); color: var(--neon-pink); margin: 20px auto 0 auto; width: 100%; font-size: 14px; border-radius: 14px; box-shadow: none;" data-i18n="btn_reset">デフォルトに戻す</button>
             </div>
 
@@ -580,7 +585,7 @@
                 <div id="gamepad-status" style="text-align:center; font-size: 14px; font-weight: bold; color: var(--neon-lime);">未接続</div>
             </div>
 
-            <button class="btn" id="close-settings-btn" style="background: #1e293b; margin: auto auto 0 auto; border-radius: 14px;" data-i18n="btn_close">閉じる</button>
+            <button class="btn" id="close-settings-btn" style="background: #1e293b; margin: auto auto 0 auto; border-radius: 14px; flex-shrink: 0;" data-i18n="btn_close">閉じる</button>
         </div>
     </div>
 
@@ -607,8 +612,8 @@
     <!-- ライブラリモーダル -->
     <div id="library-modal" class="modal">
         <div class="modal-content" style="width: 100%; max-width: 500px; display: flex; flex-direction: column; height: 100%;">
-            <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900; letter-spacing: 3px;">SHARED LIBRARY</h2>
-            <p style="text-align: center; color: var(--text-color); opacity: 0.7; font-size: 13px; margin-bottom: 20px;" data-i18n="library_desc">コミュニティのお気に入り曲</p>
+            <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900; letter-spacing: 3px; flex-shrink: 0;">SHARED LIBRARY</h2>
+            <p style="text-align: center; color: var(--text-color); opacity: 0.7; font-size: 13px; margin-bottom: 20px; flex-shrink: 0;" data-i18n="library_desc">コミュニティのお気に入り曲</p>
             
             <div class="library-tabs" id="library-tabs">
                 <button class="tab-btn active" data-mode="new" data-i18n="tab_new">新着順</button>
@@ -617,10 +622,10 @@
                 <button class="tab-btn" data-mode="monthly" data-i18n="tab_monthly">月別人気</button>
             </div>
 
-            <div id="shared-list-full">
+            <div id="shared-list-full" style="flex-grow: 1; overflow-y: auto;">
                 <div class="loader"></div>
             </div>
-            <button class="btn" id="close-library-btn" style="background: #1e293b; margin: 30px auto 0 auto; border-radius: 14px;" data-i18n="btn_close">閉じる</button>
+            <button class="btn" id="close-library-btn" style="background: #1e293b; margin: 30px auto 0 auto; border-radius: 14px; flex-shrink: 0;" data-i18n="btn_close">閉じる</button>
         </div>
     </div>
 
@@ -1236,18 +1241,27 @@ function applyVisualHit(judg, laneIdx) {
 function draw() {
     pollGamepad();
     const now = getCurrentTimeMs();
+    
+    // スキップボタンの表示制御
     if (gameState === 'PLAYING' && notes.length > 0) {
         const firstNoteTime = notes[0].time;
-        skipIntroBtn.style.display = (now < firstNoteTime - 4000) ? 'block' : 'none';
+        if (now < firstNoteTime - 4000) {
+            skipIntroBtn.style.display = 'block';
+        } else {
+            skipIntroBtn.style.display = 'none';
+        }
     } else {
         skipIntroBtn.style.display = 'none';
     }
+
     if (gameState !== 'PLAYING') {
         if (gameState === 'START' || gameState === 'FINISHED') requestAnimationFrame(draw);
         return;
     }
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const laneWidth = canvas.width / LANE_COUNT, hitY = canvas.height * HIT_LINE_Y, config = DIFFICULTY_CONFIG[currentDiff], isLight = document.body.classList.contains('light-mode');
+
     for (let i = 0; i < LANE_COUNT; i++) {
         ctx.fillStyle = activeLanes[i] ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)') : 'rgba(128,128,128,0.02)';
         ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
