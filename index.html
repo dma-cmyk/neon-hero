@@ -525,7 +525,7 @@
         </div>
 
         <div class="input-group">
-            <span class="input-label" data-i18n="label_select_track">動画トラック (YOUTUBE / TikTok)</span>
+            <span class="input-label" data-i18n="label_select_track">動画トラック (YOUTUBE)</span>
             <input type="text" id="yt-url" data-i18n-placeholder="placeholder_url">
             <div style="display: flex; gap: 12px; margin-top: 15px;">
                 <button class="btn" id="yt-load-btn" style="background: var(--input-bg); color: var(--text-color); border: 2px solid var(--neon-cyan); margin: 0; flex: 1; font-size: 15px; border-radius: 14px;" data-i18n="btn_load">読み込む</button>
@@ -703,7 +703,7 @@
         } catch (e) { return []; }
     };
 
-    window.registerSharedVideo = async (videoId, title, duration, provider = 'youtube') => {
+    window.registerSharedVideo = async (videoId, title, duration) => {
         if (!currentUser) return;
         try {
             const sharedCol = collection(db, 'artifacts', targetAppId, 'public', 'data', 'shared_videos');
@@ -712,10 +712,10 @@
             snapshot.forEach(d => { if (d.data().videoId === videoId) existingId = d.id; });
             
             if (!existingId) {
-                await addDoc(sharedCol, { videoId, title, duration, provider, timestamp: Date.now() });
+                await addDoc(sharedCol, { videoId, title, duration, timestamp: Date.now() });
             } else if (duration) {
                 const videoDoc = doc(db, 'artifacts', targetAppId, 'public', 'data', 'shared_videos', existingId);
-                await updateDoc(videoDoc, { duration: duration, provider: provider });
+                await updateDoc(videoDoc, { duration: duration });
             }
         } catch (e) { console.error(e); }
     };
@@ -762,8 +762,8 @@ const translations = {
         score_label: "スコア",
         label_player_info: "プレイヤー登録",
         placeholder_name: "名前#パスワードでトリップ...",
-        label_select_track: "動画トラック (YOUTUBE / TikTok)",
-        placeholder_url: "YouTube または TikTokのURL",
+        label_select_track: "動画トラック (YOUTUBE)",
+        placeholder_url: "YouTubeのURLを貼り付け",
         btn_load: "読み込む",
         btn_share: "共有",
         btn_open_library: "ライブラリから曲を探す",
@@ -806,8 +806,8 @@ const translations = {
         score_label: "SCORE",
         label_player_info: "PLAYER REGISTRATION",
         placeholder_name: "Name#password for trip...",
-        label_select_track: "VIDEO TRACK (YT / TikTok)",
-        placeholder_url: "Paste YouTube or TikTok URL",
+        label_select_track: "VIDEO TRACK (YOUTUBE)",
+        placeholder_url: "Paste YouTube URL",
         btn_load: "LOAD",
         btn_share: "SHARE",
         btn_open_library: "OPEN LIBRARY",
@@ -901,7 +901,6 @@ const DEFAULT_KEYS = ["arrowleft", "arrowdown", "arrowup", "arrowright"];
 let currentDiff = 'normal';
 let gameState = 'START';
 let playMode = 'NONE'; 
-let videoProvider = 'youtube';
 let score = 0, combo = 0, maxCombo = 0;
 let notes = [];
 let gameStartTime = 0;
@@ -911,7 +910,6 @@ let particles = [];
 let currentVideoId = "";
 let currentDuration = 0;
 let ytPlayer;
-let tiktokStartTime = 0; // TikTok用の擬似同期タイマー
 let currentLang = 'en';
 let uiText = translations.en;
 
@@ -986,7 +984,7 @@ resetKeysBtn.addEventListener('click', () => {
 });
 
 function skipIntro() {
-    if (videoProvider === 'youtube' && ytPlayer && notes.length > 0) {
+    if (ytPlayer && notes.length > 0) {
         const firstNoteTime = notes[0].time;
         const seekTarget = Math.max(0, (firstNoteTime - 2000) / 1000);
         ytPlayer.seekTo(seekTarget, true);
@@ -1119,102 +1117,70 @@ async function renderLibrary(mode) {
         return;
     }
 
-    sharedListFull.innerHTML = displayList.map(v => {
-        const thumb = v.provider === 'tiktok' ? 'https://www.tiktok.com/favicon.ico' : `https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`;
-        return `
-        <div class="shared-item-full" data-id="${v.videoId}" data-provider="${v.provider || 'youtube'}">
+    sharedListFull.innerHTML = displayList.map(v => `
+        <div class="shared-item-full" data-id="${v.videoId}">
             <span class="play-count-badge">${v.playCount}${uiText.plays_suffix}</span>
             <div class="thumbnail-container">
-                <img src="${thumb}" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
+                <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
                 ${v.duration ? `<span class="duration-badge">${formatDuration(v.duration)}</span>` : ""}
             </div>
             <div class="shared-item-info">
                 <div class="shared-item-title">${v.title || "Untitled Track"}</div>
             </div>
         </div>
-    `}).join('');
+    `).join('');
     
     document.querySelectorAll('.shared-item-full').forEach(item => {
         item.addEventListener('click', () => {
-            const vidId = item.dataset.id;
-            const provider = item.dataset.provider;
-            ytUrlInput.value = provider === 'youtube' ? `https://www.youtube.com/watch?v=${vidId}` : `https://www.tiktok.com/@v/video/${vidId}`;
-            loadVideo(vidId, provider);
+            ytUrlInput.value = `https://www.youtube.com/watch?v=${item.dataset.id}`;
+            loadYoutube(item.dataset.id);
             libraryModal.classList.remove('is-visible');
         });
     });
 }
 
-function extractVideoId(url) {
-    // YouTube
-    const ytMatch = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-    if (ytMatch && ytMatch[2].length === 11) return { id: ytMatch[2], provider: 'youtube' };
-    
-    // TikTok
-    const ttMatch = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
-    if (ttMatch) return { id: ttMatch[1], provider: 'tiktok' };
-    
-    return null;
+function extractYoutubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
 }
 
-function loadVideo(vidId, provider) {
+function loadYoutube(vidId) {
     currentVideoId = vidId;
-    videoProvider = provider;
     ytStatus.innerHTML = `<div class="loader"></div> ${uiText.msg_loading}`;
     previewPlaceholder.classList.add('hidden');
-    previewContent.innerHTML = '';
-
-    if (provider === 'youtube') {
-        const safeOrigin = window.location.protocol === 'file:' ? 'https://www.youtube.com' : window.location.origin;
-        ytPlayer = new YT.Player(document.createElement('div'), {
-            height: '100%', width: '100%', videoId: vidId,
-            playerVars: { 'autoplay': 1, 'controls': 1, 'origin': safeOrigin, 'enablejsapi': 1, 'modestbranding': 1, 'mute': 0 },
-            events: {
-                'onReady': (e) => {
-                    const duration = e.target.getDuration();
-                    if (duration === 0) { ytStatus.innerText = uiText.msg_error; return; }
-                    currentDuration = duration;
-                    notes = generateMap(currentDuration);
-                    playMode = 'VIDEO';
-                    ytStatus.innerText = uiText.msg_ready;
-                    startBtn.disabled = false;
-                    ytShareBtn.classList.remove('hidden');
-                    updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
-                    window.registerSharedVideo(vidId, e.target.getVideoData().title, Math.floor(duration), 'youtube');
-                    e.target.unMute();
-                    e.target.setVolume(50);
-                    previewContent.appendChild(e.target.getIframe());
-                },
-                'onError': (e) => { ytStatus.innerText = uiText.msg_error; }
-            }
-        });
-    } else {
-        // TikTok Embed
-        const ttIframe = document.createElement('iframe');
-        ttIframe.src = `https://www.tiktok.com/embed/v2/${vidId}`;
-        ttIframe.style.width = '100%';
-        ttIframe.style.height = '100%';
-        ttIframe.allow = "autoplay; encrypted-media; fullscreen";
-        previewContent.appendChild(ttIframe);
-        
-        currentDuration = 60; // TikTokは再生時間が取得できないためデフォルト60秒
-        notes = generateMap(currentDuration);
-        playMode = 'VIDEO';
-        ytStatus.innerText = uiText.msg_ready + " (TikTok)";
-        startBtn.disabled = false;
-        ytShareBtn.classList.remove('hidden');
-        updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
-        window.registerSharedVideo(vidId, "TikTok Video", 60, 'tiktok');
-    }
+    previewContent.innerHTML = '<div id="yt-player-target"></div>';
+    const safeOrigin = window.location.protocol === 'file:' ? 'https://www.youtube.com' : window.location.origin;
+    ytPlayer = new YT.Player('yt-player-target', {
+        height: '100%', width: '100%', videoId: vidId,
+        playerVars: { 'autoplay': 1, 'controls': 1, 'origin': safeOrigin, 'enablejsapi': 1, 'modestbranding': 1, 'mute': 0 },
+        events: {
+            'onReady': (e) => {
+                const duration = e.target.getDuration();
+                if (duration === 0) { ytStatus.innerText = uiText.msg_error; return; }
+                currentDuration = duration;
+                notes = generateMap(currentDuration);
+                playMode = 'VIDEO';
+                ytStatus.innerText = uiText.msg_ready;
+                startBtn.disabled = false;
+                ytShareBtn.classList.remove('hidden');
+                updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
+                window.registerSharedVideo(vidId, ytPlayer.getVideoData().title, Math.floor(duration));
+                e.target.unMute();
+                e.target.setVolume(50); 
+            },
+            'onError': (e) => { ytStatus.innerText = uiText.msg_error; }
+        }
+    });
 }
 
 ytLoadBtn.addEventListener('click', () => {
-    const res = extractVideoId(ytUrlInput.value);
-    if (res) loadVideo(res.id, res.provider); else ytStatus.innerText = uiText.msg_error;
+    const vidId = extractYoutubeId(ytUrlInput.value);
+    if (vidId) loadYoutube(vidId); else ytStatus.innerText = uiText.msg_error;
 });
 
 ytShareBtn.addEventListener('click', () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?v=${currentVideoId}&p=${videoProvider}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?v=${currentVideoId}`;
     const tempInput = document.createElement("input");
     tempInput.value = shareUrl; document.body.appendChild(tempInput); tempInput.select();
     document.execCommand("copy"); document.body.removeChild(tempInput);
@@ -1243,14 +1209,7 @@ function generateMap(durationSeconds) {
 }
 
 function getCurrentTimeMs() {
-    if (playMode === 'VIDEO') {
-        if (videoProvider === 'youtube' && ytPlayer?.getCurrentTime) {
-            return ytPlayer.getCurrentTime() * 1000;
-        } else if (videoProvider === 'tiktok') {
-            return Date.now() - tiktokStartTime;
-        }
-    }
-    return 0;
+    return (playMode === 'VIDEO' && ytPlayer?.getCurrentTime) ? ytPlayer.getCurrentTime() * 1000 : 0;
 }
 
 function drawArrowNote(lane, x, y, size) {
@@ -1307,7 +1266,7 @@ function draw() {
     const now = getCurrentTimeMs();
     if (gameState === 'PLAYING' && notes.length > 0) {
         const firstNoteTime = notes[0].time;
-        skipIntroBtn.style.display = (videoProvider === 'youtube' && now < firstNoteTime - 4000) ? 'block' : 'none';
+        skipIntroBtn.style.display = (now < firstNoteTime - 4000) ? 'block' : 'none';
     } else {
         skipIntroBtn.style.display = 'none';
     }
@@ -1344,12 +1303,7 @@ function draw() {
         p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.025;
     });
     ctx.globalAlpha = 1.0;
-    
-    let isFinished = false;
-    if (videoProvider === 'youtube') isFinished = (ytPlayer?.getPlayerState?.() === YT.PlayerState.ENDED);
-    else isFinished = (now > currentDuration * 1000);
-    
-    if (isFinished) endGame(); else requestAnimationFrame(draw);
+    if (ytPlayer?.getPlayerState?.() === YT.PlayerState.ENDED) endGame(); else requestAnimationFrame(draw);
 }
 
 async function startGame() {
@@ -1359,9 +1313,10 @@ async function startGame() {
     particles = []; scoreVal.innerText = "000000"; judgmentText.innerText = "";
     notes = generateMap(currentDuration);
     startScreen.classList.add('hidden'); resultScreen.classList.add('hidden'); gameContainer.classList.add('is-playing');
-    
-    if (videoProvider === 'youtube' && ytPlayer) {
-        window.recordPlay(currentVideoId, ytPlayer.getVideoData().title);
+    if (ytPlayer) {
+        if (typeof window.recordPlay === 'function') {
+            window.recordPlay(currentVideoId, ytPlayer.getVideoData().title);
+        }
         mediaBgContainer.innerHTML = '';
         const playerDiv = ytPlayer.getIframe();
         mediaBgContainer.appendChild(playerDiv);
@@ -1370,14 +1325,7 @@ async function startGame() {
         ytPlayer.seekTo(0);
         ytPlayer.playVideo();
         setTimeout(() => { if (ytPlayer) { ytPlayer.unMute(); ytPlayer.setVolume(100); } }, 500);
-    } else if (videoProvider === 'tiktok') {
-        tiktokStartTime = Date.now();
-        window.recordPlay(currentVideoId, "TikTok Video");
-        mediaBgContainer.innerHTML = '';
-        const ttIframe = previewContent.querySelector('iframe').cloneNode(true);
-        mediaBgContainer.appendChild(ttIframe);
     }
-    
     gameState = 'PLAYING';
     requestAnimationFrame(draw);
 }
@@ -1424,8 +1372,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const wait = setInterval(() => {
         if (typeof YT !== 'undefined' && YT.Player && typeof window.fetchSharedVideos === 'function') { 
             const vid = params.get('v');
-            const prov = params.get('p') || 'youtube';
-            if (vid) { ytUrlInput.value = prov === 'youtube' ? `https://www.youtube.com/watch?v=${vid}` : `https://www.tiktok.com/@v/video/${vid}`; loadVideo(vid, prov); }
+            if (vid) { ytUrlInput.value = `https://www.youtube.com/watch?v=${vid}`; loadYoutube(vid); }
             clearInterval(wait); 
         }
     }, 500);
