@@ -136,11 +136,12 @@
             z-index: 100;
             padding: 30px;
             box-sizing: border-box;
+            overflow-y: auto;
         }
 
         .btn {
-            padding: 15px 40px;
-            font-size: 20px;
+            padding: 12px 35px;
+            font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
             background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
@@ -150,7 +151,7 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 5px 20px rgba(255, 0, 122, 0.4);
-            margin: 10px;
+            margin: 8px;
         }
 
         .btn:hover:not(:disabled) {
@@ -161,18 +162,18 @@
         .btn:disabled { background: #333; cursor: not-allowed; opacity: 0.5; box-shadow: none; }
 
         .input-group {
-            margin: 15px 0;
+            margin: 10px 0;
             width: 100%;
             max-width: 350px;
             background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
+            padding: 15px;
             border-radius: 20px;
             border: 1px solid rgba(0, 242, 255, 0.2);
         }
 
         input[type="text"] {
             width: 90%;
-            padding: 12px;
+            padding: 10px;
             border-radius: 10px;
             border: 1px solid #444;
             background: rgba(0,0,0,0.5);
@@ -180,6 +181,30 @@
             margin-bottom: 10px;
             text-align: center;
         }
+
+        /* 難易度セレクター */
+        .diff-selector {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .diff-btn {
+            padding: 8px 12px;
+            font-size: 12px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .diff-btn.active[data-diff="easy"] { background: var(--neon-lime); color: black; border-color: var(--neon-lime); box-shadow: 0 0 10px var(--neon-lime); }
+        .diff-btn.active[data-diff="normal"] { background: var(--neon-cyan); color: black; border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+        .diff-btn.active[data-diff="hard"] { background: var(--neon-pink); color: white; border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+        .diff-btn.active[data-diff="expert"] { background: var(--neon-purple); color: white; border-color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
 
         /* 操作エリア */
         #touch-controls {
@@ -254,31 +279,40 @@
 
     <!-- メニュー画面 -->
     <div id="start-screen">
-        <h1 style="font-size: 42px; margin-bottom: 5px; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon-cyan));">ネオン・ヒーロー</h1>
-        <p style="color: #888; margin-top: 0; letter-spacing: 4px;">リズム・アクション</p>
+        <h1 style="font-size: 36px; margin-bottom: 5px; background: linear-gradient(to bottom, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px var(--neon-cyan));">ネオン・ヒーロー</h1>
+        <p style="color: #888; margin-top: 0; letter-spacing: 4px; font-size: 12px;">RHYTHM ACTION</p>
         
         <div class="input-group">
             <input type="file" id="media-upload" accept="audio/*,video/*" style="display: none;">
-            <button class="btn" style="background: #222; width: 100%; border: 1px solid #444;" onclick="document.getElementById('media-upload').click()">ローカルファイルを選択</button>
-            <div id="file-name" style="font-size: 12px; color: var(--neon-lime); margin-top: 10px; text-align: center;">MP3 または MP4 ファイルを選択してください</div>
+            <button class="btn" style="background: #222; width: 100%; border: 1px solid #444; font-size: 14px;" onclick="document.getElementById('media-upload').click()">ローカルファイルを選択</button>
+            <div id="file-name" style="font-size: 11px; color: var(--neon-lime); margin-top: 5px; text-align: center;">MP3 または MP4 を選択</div>
         </div>
 
         <div class="input-group">
             <input type="text" id="yt-url" placeholder="YouTubeのURLを貼り付け...">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" id="yt-load-btn" style="background: #333; margin: 0; flex: 1; font-size: 14px;">読み込む</button>
-                <button class="btn hidden" id="yt-share-btn" style="background: var(--neon-purple); margin: 0; flex: 1; font-size: 14px;">共有</button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn" id="yt-load-btn" style="background: #333; margin: 0; flex: 1; font-size: 12px;">読み込む</button>
+                <button class="btn hidden" id="yt-share-btn" style="background: var(--neon-purple); margin: 0; flex: 1; font-size: 12px;">共有</button>
             </div>
-            <div id="yt-status" style="font-size: 12px; color: var(--neon-pink); margin-top: 10px;"></div>
+            <div id="yt-status" style="font-size: 11px; color: var(--neon-pink); margin-top: 5px; height: 14px;"></div>
+        </div>
+
+        <div class="input-group">
+            <p style="font-size: 12px; margin: 0 0 8px 0; color: #aaa;">難易度設定</p>
+            <div class="diff-selector" id="diff-selector">
+                <button class="diff-btn" data-diff="easy">かんたん</button>
+                <button class="diff-btn active" data-diff="normal">ふつう</button>
+                <button class="diff-btn" data-diff="hard">むずかしい</button>
+                <button class="diff-btn" data-diff="expert">おに</button>
+            </div>
         </div>
 
         <button class="btn" id="start-btn" disabled>準備完了</button>
-        <div style="margin-top: 15px; font-size: 11px; color: #888; line-height: 1.4;">
-            PC: 矢印キー [←][↓][↑][→] で操作<br>
-            スマホ: 画面下の矢印をタップ
+        <div style="margin-top: 10px; font-size: 10px; color: #666; line-height: 1.4;">
+            PC: 矢印キー [←][↓][↑][→] | スマホ: 画面下の矢印
         </div>
-        <div id="origin-warning" class="hidden" style="color: var(--neon-lime); font-size: 11px; margin-top: 10px;">
-            注意: ローカルファイルとして実行すると、YouTubeの再生が制限される場合があります。
+        <div id="origin-warning" class="hidden" style="color: var(--neon-lime); font-size: 10px; margin-top: 5px;">
+            注意: ローカルファイル実行時はYouTube再生が制限される場合があります。
         </div>
     </div>
 
@@ -294,7 +328,7 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /**
- * ネオン・ヒーロー - 日本語版
+ * ネオン・ヒーロー - 難易度設定版
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -312,16 +346,25 @@ const judgmentText = document.getElementById('judgment-text');
 const mediaUpload = document.getElementById('media-upload');
 const ytStatus = document.getElementById('yt-status');
 const ytContainer = document.getElementById('youtube-player-container');
+const diffSelector = document.getElementById('diff-selector');
 
 // 設定
 const LANE_COUNT = 4;
 const KEY_MAP = { 'arrowleft': 0, 'arrowdown': 1, 'arrowup': 2, 'arrowright': 3 };
 const JUDGMENT_MS = { PERFECT: 60, GREAT: 110, GOOD: 160, MISS: 250 };
-const NOTE_SPEED = 0.6; 
 const HIT_LINE_Y = 0.82;
 const COLORS = ['#00f2ff', '#ff007a', '#bcff00', '#9d00ff'];
 
+// 難易度ごとのパラメータ
+const DIFFICULTY_CONFIG = {
+    easy:   { speed: 0.45, interval: 450, prob: 0.35 },
+    normal: { speed: 0.60, interval: 300, prob: 0.45 },
+    hard:   { speed: 0.75, interval: 220, prob: 0.55 },
+    expert: { speed: 0.95, interval: 160, prob: 0.65 }
+};
+
 // ゲーム状態
+let currentDiff = 'normal';
 let gameState = 'START';
 let playMode = 'NONE'; 
 let score = 0, combo = 0, maxCombo = 0;
@@ -331,6 +374,21 @@ let stats = { perfect: 0, great: 0, good: 0, miss: 0 };
 let activeLanes = [false, false, false, false];
 let particles = [];
 let currentVideoId = "";
+let currentDuration = 0;
+
+// 難易度選択イベント
+diffSelector.addEventListener('click', (e) => {
+    if (e.target.classList.contains('diff-btn')) {
+        document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        currentDiff = e.target.dataset.diff;
+        
+        // 既にメディアが読み込まれている場合は譜面を再生成
+        if (currentDuration > 0) {
+            notes = generateMap(currentDuration);
+        }
+    }
+});
 
 // オーディオシステム
 let audioCtx, analyser, frequencyData, audioBuffer, audioSource;
@@ -358,7 +416,8 @@ mediaUpload.addEventListener('change', async (e) => {
         playMode = 'FILE_VIDEO';
         bgVideo.src = URL.createObjectURL(file);
         bgVideo.onloadedmetadata = () => {
-            notes = generateMap(bgVideo.duration);
+            currentDuration = bgVideo.duration;
+            notes = generateMap(currentDuration);
             startBtn.disabled = false;
             startBtn.innerText = "動画でプレイ開始！";
             bgVideo.classList.remove('hidden');
@@ -370,7 +429,8 @@ mediaUpload.addEventListener('change', async (e) => {
         try {
             const arrayBuffer = await file.arrayBuffer();
             audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-            notes = generateMap(audioBuffer.duration);
+            currentDuration = audioBuffer.duration;
+            notes = generateMap(currentDuration);
             startBtn.disabled = false;
             startBtn.innerText = "音楽でプレイ開始！";
             bgVideo.classList.add('hidden');
@@ -399,14 +459,15 @@ function loadYoutube(vidId) {
             'onReady': (e) => {
                 const duration = e.target.getDuration();
                 if (duration === 0) { ytStatus.innerText = "再生制限のある動画です。"; return; }
-                notes = generateMap(duration);
+                currentDuration = duration;
+                notes = generateMap(currentDuration);
                 playMode = 'YOUTUBE';
                 ytStatus.innerText = "読み込み完了！";
                 startBtn.disabled = false;
                 startBtn.innerText = "YouTubeでプレイ開始！";
                 ytShareBtn.classList.remove('hidden');
             },
-            'onError': () => { ytStatus.innerText = "読み込み中にエラーが発生しました。"; }
+            'onError': () => { ytStatus.innerText = "エラーが発生しました。"; }
         }
     });
 }
@@ -440,11 +501,18 @@ function extractYoutubeId(url) {
 
 function generateMap(durationSeconds) {
     const map = [];
-    const step = 280; 
+    const config = DIFFICULTY_CONFIG[currentDiff];
     const totalMs = durationSeconds * 1000;
-    for (let t = 2500; t < totalMs - 2000; t += step) {
-        if (Math.random() < 0.45) {
+    
+    // 難易度設定に基づいた譜面生成
+    for (let t = 2500; t < totalMs - 2000; t += config.interval) {
+        if (Math.random() < config.prob) {
             map.push({ time: t, lane: Math.floor(Math.random() * LANE_COUNT), hit: false });
+            
+            // Expertのみ同時押しの確率を追加
+            if (currentDiff === 'expert' && Math.random() < 0.2) {
+                map.push({ time: t, lane: (Math.floor(Math.random() * LANE_COUNT)) % LANE_COUNT, hit: false });
+            }
         }
     }
     return map;
@@ -546,6 +614,7 @@ function draw() {
     const now = getCurrentTimeMs();
     const laneWidth = canvas.width / LANE_COUNT;
     const hitY = canvas.height * HIT_LINE_Y;
+    const config = DIFFICULTY_CONFIG[currentDiff];
 
     let pulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
 
@@ -569,11 +638,11 @@ function draw() {
         ctx.shadowBlur = 0;
     }
 
-    // ノーツ描画
+    // ノーツ描画 (難易度ごとのスピードを適用)
     notes.forEach(note => {
         if (note.hit) return;
         const timeDiff = note.time - now;
-        const y = hitY - (timeDiff * NOTE_SPEED);
+        const y = hitY - (timeDiff * config.speed);
 
         if (y > -100 && y < canvas.height + 100) {
             const color = COLORS[note.lane];
@@ -635,6 +704,9 @@ function startGame() {
     judgmentText.innerText = "";
     comboText.style.opacity = "0";
     
+    // ゲーム開始時に再度譜面を生成（最新の難易度設定を反映）
+    notes = generateMap(currentDuration);
+
     startScreen.classList.add('hidden');
     resultScreen.classList.add('hidden');
     
@@ -665,7 +737,8 @@ function endGame() {
         <span style="color:var(--neon-pink)">GREAT: ${stats.great}</span><br>
         <span style="color:var(--neon-lime)">GOOD: ${stats.good}</span><br>
         <span style="color:#666">MISS: ${stats.miss}</span><br><br>
-        最大コンボ: <span style="color:white; font-size: 20px;">${maxCombo}</span>
+        最大コンボ: <span style="color:white; font-size: 20px;">${maxCombo}</span><br>
+        難易度: <span style="color:var(--neon-cyan)">${currentDiff.toUpperCase()}</span>
     `;
     if (audioSource) { try { audioSource.stop(); } catch(e){} }
 }
