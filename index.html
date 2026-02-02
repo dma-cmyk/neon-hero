@@ -362,7 +362,6 @@
         }
         #preview-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 14px; text-align: center; font-weight: 800; }
         
-        /* YouTubeプレビュー内のiFrameを強制フィットさせる */
         #preview-content { width: 100%; height: 100%; position: relative; }
         #preview-content iframe {
             position: absolute;
@@ -455,21 +454,22 @@
         .key-bind-btn {
             background: var(--input-bg);
             border: 1px solid var(--panel-border);
-            padding: 15px;
-            border-radius: 14px;
+            padding: 18px 15px;
+            border-radius: 16px;
             color: var(--text-color);
-            font-weight: 900;
             cursor: pointer;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 5px;
-            transition: 0.2s;
+            justify-content: space-between;
+            gap: 15px;
+            transition: 0.3s;
         }
         .key-bind-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--neon-cyan); }
         .key-bind-btn.waiting { border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-        .key-name { font-size: 20px; color: var(--neon-cyan); }
+        .key-name { font-size: 18px; color: var(--neon-cyan); font-weight: 900; font-family: 'Exo 2', sans-serif; text-transform: uppercase; }
+        .lane-arrow { font-size: 28px; font-weight: 900; line-height: 1; filter: drop-shadow(0 0 8px currentColor); }
 
         #touch-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 160px; display: grid; grid-template-columns: repeat(4, 1fr); z-index: 20; }
         .touch-btn { background: linear-gradient(to bottom, transparent, rgba(128, 128, 128, 0.08)); border-top: 1px solid rgba(128, 128, 128, 0.15); display: flex; align-items: center; justify-content: center; font-size: 38px; color: rgba(128, 128, 128, 0.4); user-select: none; transition: all 0.15s; pointer-events: auto; }
@@ -548,25 +548,39 @@
 
     <!-- 設定画面 -->
     <div id="settings-modal" class="modal">
-        <div class="modal-content" style="width: 100%; max-width: 450px;">
+        <div class="modal-content" style="width: 100%; max-width: 450px; display: flex; flex-direction: column; height: 100%;">
             <h2 style="text-align: center; color: var(--neon-cyan); margin: 0; font-weight: 900;" data-i18n="settings_title">操作設定</h2>
             
             <div class="input-group" style="margin-top: 25px;">
-                <span class="input-label" data-i18n="label_key_config">キーコンフィグ</span>
+                <span class="input-label" data-i18n="label_key_config">キーボード設定</span>
                 <div class="key-config-grid">
-                    <button class="key-bind-btn" data-lane="0"><span>Lane 1</span><span class="key-name" id="key-name-0">←</span></button>
-                    <button class="key-bind-btn" data-lane="1"><span>Lane 2</span><span class="key-name" id="key-name-1">↓</span></button>
-                    <button class="key-bind-btn" data-lane="2"><span>Lane 3</span><span class="key-name" id="key-name-2">↑</span></button>
-                    <button class="key-bind-btn" data-lane="3"><span>Lane 4</span><span class="key-name" id="key-name-3">→</span></button>
+                    <button class="key-bind-btn" data-lane="0">
+                        <span class="lane-arrow" style="color: var(--neon-cyan);">←</span>
+                        <span class="key-name" id="key-name-0">LEFT</span>
+                    </button>
+                    <button class="key-bind-btn" data-lane="1">
+                        <span class="lane-arrow" style="color: var(--neon-pink);">↓</span>
+                        <span class="key-name" id="key-name-1">DOWN</span>
+                    </button>
+                    <button class="key-bind-btn" data-lane="2">
+                        <span class="lane-arrow" style="color: var(--neon-lime);">↑</span>
+                        <span class="key-name" id="key-name-2">UP</span>
+                    </button>
+                    <button class="key-bind-btn" data-lane="3">
+                        <span class="lane-arrow" style="color: var(--neon-purple);">→</span>
+                        <span class="key-name" id="key-name-3">RIGHT</span>
+                    </button>
                 </div>
+                <!-- リセットボタン -->
+                <button class="btn" id="reset-keys-btn" style="background: rgba(255, 0, 122, 0.15); border: 1px solid var(--neon-pink); color: var(--neon-pink); margin: 20px auto 0 auto; width: 100%; font-size: 14px; border-radius: 14px; box-shadow: none;" data-i18n="btn_reset">デフォルトに戻す</button>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" style="margin-top: 0;">
                 <span class="input-label" data-i18n="label_gamepad">ゲームパッド状態</span>
                 <div id="gamepad-status" style="text-align:center; font-size: 14px; font-weight: bold; color: var(--neon-lime);">未接続</div>
             </div>
 
-            <button class="btn" id="close-settings-btn" style="background: #1e293b; margin: 20px auto 0 auto; border-radius: 14px;" data-i18n="btn_close">閉じる</button>
+            <button class="btn" id="close-settings-btn" style="background: #1e293b; margin: auto auto 0 auto; border-radius: 14px;" data-i18n="btn_close">閉じる</button>
         </div>
     </div>
 
@@ -764,7 +778,9 @@ const translations = {
         label_gamepad: "ゲームパッド状態",
         msg_gamepad_on: "接続済み",
         msg_gamepad_off: "未接続",
-        btn_skip_intro: "イントロをスキップ"
+        btn_skip_intro: "イントロをスキップ",
+        btn_reset: "デフォルトに戻す",
+        msg_reset_done: "初期設定に戻しました"
     },
     en: {
         score_label: "SCORE",
@@ -806,7 +822,9 @@ const translations = {
         label_gamepad: "GAMEPAD STATUS",
         msg_gamepad_on: "CONNECTED",
         msg_gamepad_off: "DISCONNECTED",
-        btn_skip_intro: "SKIP INTRO"
+        btn_skip_intro: "SKIP INTRO",
+        btn_reset: "RESET TO DEFAULT",
+        msg_reset_done: "Keys reset to default"
     }
 };
 
@@ -821,6 +839,7 @@ const libraryModal = document.getElementById('library-modal');
 const settingsModal = document.getElementById('settings-modal');
 const openSettingsBtn = document.getElementById('open-settings-btn');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
+const resetKeysBtn = document.getElementById('reset-keys-btn');
 const openLibraryBtn = document.getElementById('open-library-btn');
 const closeLibraryBtn = document.getElementById('close-library-btn');
 const skipIntroBtn = document.getElementById('skip-intro-btn');
@@ -858,6 +877,7 @@ const DIFFICULTY_CONFIG = {
     expert: { speed: 0.95, interval: 160, prob: 0.65 }
 };
 
+const DEFAULT_KEYS = ["arrowleft", "arrowdown", "arrowup", "arrowright"];
 let currentDiff = 'normal';
 let gameState = 'START';
 let playMode = 'NONE'; 
@@ -874,7 +894,7 @@ let currentLang = 'en';
 let uiText = translations.en;
 
 // キーコンフィグ
-let keyBindings = JSON.parse(localStorage.getItem('neon-hero-keys')) || ["arrowleft", "arrowdown", "arrowup", "arrowright"];
+let keyBindings = JSON.parse(localStorage.getItem('neon-hero-keys')) || [...DEFAULT_KEYS];
 let isBindingKey = null;
 
 function initI18n() {
@@ -927,6 +947,14 @@ closeSettingsBtn.addEventListener('click', () => {
     isBindingKey = null;
     document.querySelectorAll('.key-bind-btn').forEach(b => b.classList.remove('waiting'));
     updateKeyConfigUI();
+});
+
+// デフォルトリセット
+resetKeysBtn.addEventListener('click', () => {
+    keyBindings = [...DEFAULT_KEYS];
+    localStorage.setItem('neon-hero-keys', JSON.stringify(keyBindings));
+    updateKeyConfigUI();
+    showToast(uiText.msg_reset_done);
 });
 
 // スキップ処理
@@ -1060,7 +1088,7 @@ async function renderLibrary(mode) {
     }
 
     if (displayList.length === 0) {
-        sharedListFull.innerHTML = `<div style="color:#64748b; font-size:14px; text-align:center;">${uiText.msg_no_records}</div>`;
+        sharedListFull.innerHTML = `<div style="text-align:center; padding:20px; opacity:0.5;">${uiText.msg_no_records}</div>`;
         return;
     }
 
@@ -1104,7 +1132,6 @@ function loadYoutube(vidId) {
                 ytShareBtn.classList.remove('hidden');
                 updateRankingDisplay(currentVideoId, currentDiff, menuRankingList, menuRankingContainer);
                 window.registerSharedVideo(vidId, ytPlayer.getVideoData().title);
-                // プレビュー時のミュート対策
                 e.target.unMute();
                 e.target.setVolume(50); 
             },
@@ -1209,27 +1236,18 @@ function applyVisualHit(judg, laneIdx) {
 function draw() {
     pollGamepad();
     const now = getCurrentTimeMs();
-    
-    // スキップボタンの表示制御
     if (gameState === 'PLAYING' && notes.length > 0) {
         const firstNoteTime = notes[0].time;
-        if (now < firstNoteTime - 4000) {
-            skipIntroBtn.style.display = 'block';
-        } else {
-            skipIntroBtn.style.display = 'none';
-        }
+        skipIntroBtn.style.display = (now < firstNoteTime - 4000) ? 'block' : 'none';
     } else {
         skipIntroBtn.style.display = 'none';
     }
-
     if (gameState !== 'PLAYING') {
         if (gameState === 'START' || gameState === 'FINISHED') requestAnimationFrame(draw);
         return;
     }
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const laneWidth = canvas.width / LANE_COUNT, hitY = canvas.height * HIT_LINE_Y, config = DIFFICULTY_CONFIG[currentDiff], isLight = document.body.classList.contains('light-mode');
-
     for (let i = 0; i < LANE_COUNT; i++) {
         ctx.fillStyle = activeLanes[i] ? (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)') : 'rgba(128,128,128,0.02)';
         ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
