@@ -364,6 +364,33 @@
         }
         .modal.is-visible { display: flex; animation: fadeIn 0.4s ease; }
 
+        /* ライブラリ詳細表示用 */
+        .shared-item-full {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            padding: 12px; border-radius: 18px;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            display: flex; gap: 15px; align-items: center;
+        }
+        .shared-item-full:hover {
+            background: var(--panel-bg);
+            border-color: var(--neon-cyan);
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+        .shared-thumbnail {
+            width: 120px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+            border: 1px solid rgba(128,128,128,0.2);
+            background: #000;
+        }
+        .shared-item-info { flex-grow: 1; min-width: 0; }
+        .shared-item-title { font-size: 15px; font-weight: 800; color: var(--text-color); line-height: 1.4; word-break: break-word; }
+
         #touch-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 160px; display: grid; grid-template-columns: repeat(4, 1fr); z-index: 20; }
         .touch-btn { background: linear-gradient(to bottom, transparent, rgba(128, 128, 128, 0.08)); border-top: 1px solid rgba(128, 128, 128, 0.15); display: flex; align-items: center; justify-content: center; font-size: 38px; color: rgba(128, 128, 128, 0.4); user-select: none; transition: all 0.15s; }
         .touch-btn.active { background: rgba(0, 242, 255, 0.15); color: var(--neon-cyan); border-top: 5px solid var(--neon-cyan); text-shadow: 0 0 20px var(--neon-cyan); }
@@ -761,7 +788,6 @@ diffSelector.addEventListener('click', (e) => {
 async function renderLibrary() {
     sharedListFull.innerHTML = '<div class="loader"></div>';
     
-    // fetchSharedVideosが存在するか安全に確認
     if (typeof window.fetchSharedVideos !== 'function') {
         sharedListFull.innerHTML = `<div style="color:#64748b; font-size:14px; text-align:center;">${uiText.msg_loading}</div>`;
         return;
@@ -772,9 +798,13 @@ async function renderLibrary() {
         sharedListFull.innerHTML = `<div style="color:#64748b; font-size:14px; text-align:center;">${uiText.msg_no_records}</div>`;
         return;
     }
+
     sharedListFull.innerHTML = videos.map(v => `
         <div class="shared-item-full" data-id="${v.videoId}">
-            <div class="shared-item-title">${v.title || "Untitled Track"}</div>
+            <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" class="shared-thumbnail" onerror="this.src='https://via.placeholder.com/120x68?text=No+Image'">
+            <div class="shared-item-info">
+                <div class="shared-item-title">${v.title || "Untitled Track"}</div>
+            </div>
         </div>
     `).join('');
     
